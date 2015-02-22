@@ -30,7 +30,8 @@ end
 describe 'log_in' do
 
   before(:each) do
-    @patron = Storage.get_patron('axle')
+    store = Storage.new
+    @patron = store.get_patron('axle')
     @library = Library.new('http://www.rbdigital.com/southdublin/service/zinio/landing/')
   end
 
@@ -46,7 +47,8 @@ end
 describe 'build_catalogue' do
 
   before(:each) do
-    @patron = Storage.get_patron('axle')
+    store = Storage.new
+    @patron = store.get_patron('axle')
     @library = Library.new('http://www.rbdigital.com/southdublin/service/zinio/landing/')
     @spec_dir = File.dirname(__FILE__)
   end

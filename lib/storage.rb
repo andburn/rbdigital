@@ -86,12 +86,12 @@ class Storage
     end
 
     def load_file_to_array(filename)
-      return nil unless File.exists?(filename)
+      return nil unless File.exist?(filename)
       File.open(filename, 'r').readlines
     end
 
     def modify_line_in_file(filename, old, new)
-      return nil unless File.exists?(filename)
+      return nil unless File.exist?(filename)
       lines = File.open(filename, 'r').readlines
       lines.each_with_index do |line, i|
         if line =~ /^#{old}/
