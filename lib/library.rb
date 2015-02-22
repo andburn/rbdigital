@@ -45,17 +45,21 @@ class Library
     first_page = build_catalogue_page(url, 1, true)
     # pop off the total pages
     total_pages = first_page.pop
+    # if an error occured return empty array
+    if total_pages.nil?
+      return []
+    end
     magazines.concat(first_page)
     # get rest of pages
-    (2..total_pages).each do |i| 
+    (2..total_pages).each do |i|
       magazines.concat(build_catalogue_page(url, i, false))
     end
     magazines
   end
-  
+
   def build_catalogue_page(url, page, get_max_page=false)
     magazines = []
-   
+
     # for testing, so can pass single html file
     if url.nil?
       response = post_request('http://www.rbdigital.com/ajaxd.php?action=zinio_landing_magazine_collection', {
@@ -79,14 +83,14 @@ class Library
         anchor = m.children.at_css('a')
         if anchor[:href] =~ /mag_id=(\d+)$/
           img = anchor.children.at_css('img')
-          mag = Magazine.new(anchor[:title], $1, img[:src])          
+          mag = Magazine.new(anchor[:title], $1, img[:src])
           magazines << mag
         end
       end
       # get the total number of available pages
       if get_max_page
         links = page_html.at_css('div.links').children.css('a')
-        links.each do |l|          
+        links.each do |l|
           if l[:title] == 'The last page'
             if l[:onclick] =~ /OnMagazineCollectionSearch\(\s*'(\d+)'\)/i
               magazines << $1.to_i
@@ -95,9 +99,9 @@ class Library
         end
       end
     end
-    
-    
-    
+
+
+
     magazines
   end
 
@@ -139,7 +143,7 @@ class Library
     end
     return false
   end
-  
+
   private
 
     def post_request(url, opts)

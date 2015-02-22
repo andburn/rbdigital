@@ -61,7 +61,7 @@ describe 'build_catalogue' do
 
   # TODO: adjust this so takes account of multi page
   it 'should create a list of all available magazines' do
-    catalogue = @library.build_catalogue(File.join(@spec_dir, 'data', 'catalogue_small_new.html'))
+    catalogue = @library.build_catalogue(File.join(@spec_dir, 'data', 'catalogue_small.html'))
     expect(catalogue.length).to eq(4)
   end
 
