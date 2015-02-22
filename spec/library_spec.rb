@@ -31,7 +31,7 @@ describe 'log_in' do
 
   before(:each) do
     store = Storage.new
-    @patron = store.get_patron('axle')
+    @patron = store.get_patron('Axle')
     @library = Library.new('http://www.rbdigital.com/southdublin/service/zinio/landing/')
   end
 
@@ -48,7 +48,7 @@ describe 'build_catalogue' do
 
   before(:each) do
     store = Storage.new
-    @patron = store.get_patron('axle')
+    @patron = store.get_patron('Axle')
     @library = Library.new('http://www.rbdigital.com/southdublin/service/zinio/landing/')
     @spec_dir = File.dirname(__FILE__)
   end
@@ -61,8 +61,8 @@ describe 'build_catalogue' do
 
   # TODO: adjust this so takes account of multi page
   it 'should create a list of all available magazines' do
-    catalogue = @library.build_catalogue(File.join(@spec_dir, 'data', 'catalogue_small.html'))
-    expect(catalogue.length).to eq(4)
+    catalogue = @library.build_catalogue(File.join(@spec_dir, 'data', 'catalogue_small_new.html'))
+    expect(catalogue.length).to eq(28)
   end
 
   it 'should handle an error in getting catalogue' do

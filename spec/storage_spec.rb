@@ -10,9 +10,9 @@ describe 'storage' do
     @store_dir = File.expand_path('data', File.join(File.dirname(__FILE__), '..'))
   end
 
-  xit 'should call write_to_file' do
+  it 'should call write_to_file' do
     expect(@storage).to receive(:write_to_file).with(
-        File.join(@store_dir, 'patrons.txt'), "bill,b@mail.com,2222\n")
+        File.join(@store_dir, 'patrons.txt'), "bill;b@mail.com;2222\n")
     @storage.add_patron('bill','b@mail.com','2222')
   end
 
