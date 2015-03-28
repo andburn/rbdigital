@@ -68,7 +68,7 @@ def checkout_all(library, storage, list)
 end
 
 
-
+log("Script starting...")
 # NOTE: alternative to optparse http://docopt.org/
 options = {}
 OptionParser.new do |opts|
@@ -147,3 +147,4 @@ elsif options[:update]
     storage.save_catalogue(current)
   end
 end
+log("...finished.")
