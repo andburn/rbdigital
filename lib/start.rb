@@ -6,11 +6,16 @@ require_relative 'patron'
 require_relative 'storage'
 
 LOG_FILE = File.expand_path('data/log.txt', File.join(File.dirname(__FILE__), '..'))
+DATA_FILE = '/media/Portable/Media/Storage/rbdigital/log.txt';
 START_PAGE = 'http://www.rbdigital.com/southdublin/service/zinio/landing/'
 
 def log(message)
+  log_string = Time.now.strftime('[%Y-%m-%d %H:%M:%S] ') + message + "\n"
   File.open(LOG_FILE, 'a+') do |f|
-    f.write(Time.now.strftime('[%Y-%m-%d %H:%M:%S] ') + message + "\n")
+    f.write(log_string)
+  end
+  File.open(DATA_FILE, 'a+') do |f|
+    f.write(log_string)
   end
 end
 
@@ -68,7 +73,7 @@ def checkout_all(library, storage, list)
 end
 
 
-log("Script starting...")
+#log("Script starting...")
 # NOTE: alternative to optparse http://docopt.org/
 options = {}
 OptionParser.new do |opts|
@@ -147,4 +152,4 @@ elsif options[:update]
     storage.save_catalogue(current)
   end
 end
-log("...finished.")
+#log("...finished.")
