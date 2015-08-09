@@ -145,21 +145,19 @@ class Library
       uri = URI.parse(url)
       response = Net::HTTP.post_form(uri, opts)
       # TODO: need to include new cookies without deleting
-      # TODO: what is this actually doing
       res_hash = response.to_hash
       if res_hash.key?('set-cookie')
         @cookies = ''
         res_hash['set-cookie'].each do |c|
-          if c !~ /deleted/
+          if c !~ /deleted/ # deleted values appearing with same names
             if c =~ /^(.*?;)/
               @cookies += $1
-              print "ck:#{$1}\n"
             end
           end
         end
+        # original , each entry grab first section before ; and join to string
         #@cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
       end
-      print "post:" + @cookies
       response.body
     end
 
@@ -182,7 +180,6 @@ class Library
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Get.new(uri.request_uri)
       request['Cookie'] = @cookies
-      print "get:" + @cookies
       response = http.request(request)
       # TODO: need to check for new cookies?
       response.body
