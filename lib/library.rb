@@ -150,11 +150,15 @@ class Library
       if res_hash.key?('set-cookie')
         @cookies = ''
         res_hash['set-cookie'].each |c| do
-          print c
+          if c !~ /deleted/
+            if c =~ /^(.*?;)/
+              @cookies += $1
+              print "ck:#{$1}\n"
+            end
+          end
         end
-        @cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
+        #@cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
       end
-      #@cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
       print "post:" + @cookies
       response.body
     end
