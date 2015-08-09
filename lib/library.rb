@@ -149,7 +149,7 @@ class Library
       res_hash = response.to_hash
       if res_hash.key?('set-cookie')
         @cookies = ''
-        res_hash['set-cookie'].each |c| do
+        res_hash['set-cookie'].each do |c|
           if c !~ /deleted/
             if c =~ /^(.*?;)/
               @cookies += $1
