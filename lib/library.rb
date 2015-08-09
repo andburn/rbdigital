@@ -18,7 +18,7 @@ class Library
     body = get_request(@start_page)
     page = Nokogiri::HTML(body)
     welcome = page.at_css('div.navigation div.welcome')
-    welcome.length == 1
+    !welcome.nil?
   end
 
   def log_in(patron)
