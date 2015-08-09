@@ -18,7 +18,7 @@ class Library
     body = get_request(@start_page)
     page = Nokogiri::HTML(body)
     welcome = page.at_css('div.navigation div.welcome')
-    !welcome.nil?
+    not welcome.nil?
   end
 
   def log_in(patron)
@@ -150,6 +150,7 @@ class Library
       if res_hash.key?('set-cookie')
         @cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
       end
+      print "post:" + @cookies
       response.body
     end
 
@@ -172,6 +173,7 @@ class Library
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Get.new(uri.request_uri)
       request['Cookie'] = @cookies
+      print "get:" + @cookies
       response = http.request(request)
       # TODO: need to check for new cookies?
       response.body
