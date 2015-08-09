@@ -17,13 +17,8 @@ class Library
   def logged_in?
     body = get_request(@start_page)
     page = Nokogiri::HTML(body)
-    anchors = page.css('div.navigation a')
-    anchors.each do |a|
-      if a.text =~ /log out/i
-        return true
-      end
-    end
-    false
+    welcome = page.at_css('div.navigation div.welcome')
+    welcome.length == 1
   end
 
   def log_in(patron)
