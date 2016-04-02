@@ -1,8 +1,3 @@
-require 'rspec'
-
-require_relative '../lib/storage'
-require_relative 'spec_helper'
-
 describe 'storage' do
 
   before(:each) do

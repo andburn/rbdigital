@@ -1,7 +1,3 @@
-require 'rspec'
-
-require_relative '../lib/magazine'
-
 describe 'magazine' do
 
 	before(:all) do
@@ -27,6 +23,10 @@ describe 'magazine' do
 
 	it 'should not equate if cover urls are different' do
 		expect(@mag_b).not_to eq(@mag_c)
+	end
+
+	it 'should contain title and id as a string' do
+		expect(@mag_c.to_s).to eq("Splendid Shoes (3573)")
 	end
 
 end

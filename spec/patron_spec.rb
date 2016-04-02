@@ -1,6 +1,3 @@
-require 'rspec'
-require_relative '../lib/patron'
-
 describe 'Patron' do
 
   before(:all) do
@@ -17,6 +14,10 @@ describe 'Patron' do
     expect {
       @patron.password = '3344'
     }.to raise_error NoMethodError
+  end
+
+  it 'should converted to a string as name comma email' do
+    expect(@patron.to_s).to eq("joe,joe@90.com")
   end
 
 end

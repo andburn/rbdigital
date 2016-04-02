@@ -1,9 +1,3 @@
-require 'rspec'
-
-require_relative '../lib/library'
-require_relative '../lib/patron'
-require_relative '../lib/storage'
-
 describe 'logged_in?' do
 
   before(:all) do
@@ -31,8 +25,8 @@ describe 'log_in' do
 
   before(:each) do
     store = Storage.new
-    @patron = store.get_patron('Axle')
-    @library = Library.new('http://www.rbdigital.com/southdublin/service/zinio/landing/')
+    @patron = store.get_patron('Andrew')
+    @library = Library.new('http://www.rbdigital.com/lgma/service/zinio/landing/')
   end
 
   it 'should log in from logged out state' do
@@ -48,8 +42,7 @@ describe 'build_catalogue' do
 
   before(:each) do
     store = Storage.new
-    @patron = store.get_patron('Axle')
-    @library = Library.new('http://www.rbdigital.com/southdublin/service/zinio/landing/')
+    @library = Library.new('http://www.rbdigital.com/lgma/service/zinio/landing/')
     @spec_dir = File.dirname(__FILE__)
   end
 
