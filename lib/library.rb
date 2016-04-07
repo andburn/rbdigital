@@ -5,183 +5,180 @@ require 'json'
 
 require_relative 'magazine'
 
-class Library
+module App
 
-  attr_reader :start_page, :cookies
+  class Library
 
-  def initialize(page)
-    @start_page = page
-    @cookies = ''
-  end
+    AJAX_URL = 'http://www.rbdigital.com/ajaxd.php?action='
+    LOGIN_URL = AJAX_URL + 'p_login'
+    CATALOGUE_URL = AJAX_URL + 'zinio_landing_magazine_collection'
+    CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
 
-  def logged_in?
-    body = get_request(@start_page)
-    page = Nokogiri::HTML(body)
-    welcome = page.at_css('div.navigation div.welcome')
-    not welcome.nil?
-  end
+    attr_reader :start_page, :cookies, :id
 
-  def log_in(patron)
-    post_request('http://www.rbdigital.com/ajaxd.php?action=p_login', {
-        :email => patron.email,
-        :password => patron.password,
-        :remember_me => 1,
-        :lib_id => 857
-    })
-  end
-
-  def log_out
-    @cookies = ''
-  end
-
-  def build_catalogue(url=nil)
-    magazines = []
-    # get first page and total pages
-    first_page = build_catalogue_page(url, 1, true)
-    # pop off the total pages
-    total_pages = first_page.pop
-    # if an error occured return empty array
-    if total_pages.nil?
-      return []
+    # init with the landing page url, and the library id
+    def initialize(page, id)
+      @start_page = page
+      @id = id
+      @cookies = ''
     end
-    magazines.concat(first_page)
-    # get rest of pages
-    (2..total_pages).each do |i|
-      magazines.concat(build_catalogue_page(url, i, false))
+
+    def log_in(patron)
+      post_request(LOGIN_URL, {
+          :email => patron.email,
+          :password => patron.password,
+          :remember_me => 1,
+          :lib_id => @id
+      })
     end
-    magazines
-  end
 
-  def build_catalogue_page(url, page, get_max_page=false)
-    magazines = []
+    def log_out
+      # clear cookies
+      @cookies = ''
+    end
 
-    # for testing, so can pass single html file
-    if url.nil?
-      response = post_request('http://www.rbdigital.com/ajaxd.php?action=zinio_landing_magazine_collection', {
+    def logged_in?
+      body = get_request(@start_page)
+      page = Nokogiri::HTML(body)
+      welcome = page.at_css('div.navigation div.welcome')
+      not welcome.nil?
+    end
+
+    def build_catalogue()
+      magazines = []
+      # get first page and total pages
+      first_page = build_catalogue_page(1, true)
+      # pop off the total pages
+      total_pages = first_page.pop
+      # if an error occured return empty array
+      if total_pages.nil?
+        return []
+      end
+      magazines.concat(first_page)
+      # get rest of pages
+      (2..total_pages).each do |i|
+        magazines.concat(build_catalogue_page(i, false))
+      end
+      magazines
+    end
+
+    def build_catalogue_page(page, get_max_page=false)
+      magazines = []
+
+      response = post_request(CATALOGUE_URL, {
           :genre_search_line => '',
           :language_search_line => '',
-          :lib_id => 857,
+          :lib_id => @id,
           :p_num => page,
           :strQueryLine => '//',
           :title_search_line => ''
       })
-    else
-      response = get_request(url)
-    end
 
-    json = JSON.parse(response)
-    if json.key?('status') && json['status'] == 'OK'
-      content = Base64.decode64(json['content'])
-      page_html = Nokogiri::HTML(content)
-      mags = page_html.css('div.magazine')
-      mags.each do |m|
-        anchor = m.children.at_css('a')
-        if anchor[:href] =~ /mag_id=(\d+)$/
-          img = anchor.children.at_css('img')
-          mag = Magazine.new(anchor[:title], $1, img[:src])
-          magazines << mag
+      json = JSON.parse(response)
+      if json.key?('status') && json['status'] == 'OK'
+        content = Base64.decode64(json['content'])
+        page_html = Nokogiri::HTML(content)
+        mags = page_html.css('div.magazine')
+        mags.each do |m|
+          anchor = m.children.at_css('a')
+          if anchor[:href] =~ /mag_id=(\d+)$/
+            img = anchor.children.at_css('img')
+            mag = Magazine.new(anchor[:title], $1, img[:src])
+            magazines << mag
+          end
         end
-      end
-      # get the total number of available pages
-      if get_max_page
-        links = page_html.at_css('div.links').children.css('a')
-        links.each do |l|
-          if l[:title] == 'The last page'
-            if l[:onclick] =~ /OnMagazineCollectionSearch\(\s*'(\d+)'\)/i
-              magazines << $1.to_i
+        # get the total number of available pages
+        if get_max_page
+          links = page_html.at_css('div.links').children.css('a')
+          links.each do |l|
+            if l[:title] == 'The last page'
+              if l[:onclick] =~ /OnMagazineCollectionSearch\(\s*'(\d+)'\)/i
+                magazines << $1.to_i
+              end
             end
           end
         end
       end
+
+      magazines
     end
 
+    def checkout(id)
 
+      uri = URI.parse(CHECKOUT_URL)
 
-    magazines
-  end
+      http = Net::HTTP.new(uri.host, uri.port)
+      request = Net::HTTP::Post.new(uri.request_uri)
+      request.set_form_data({:lib_id => @id, :mag_id => id})
+      request['Cookie'] = @cookies
 
-  def checkout(id)
+      response = http.request(request)
 
-    uri = URI.parse('http://www.rbdigital.com/ajaxd.php?action=zinio_checkout_complete')
+      # to check retrieve json and get codes
+      json = JSON.parse(response.body)
+      status = json['status']
+      msg = json['title']
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    request = Net::HTTP::Post.new(uri.request_uri)
-    request.set_form_data({:lib_id => 857, :mag_id => id})
-    request['Cookie'] = @cookies
+      # if status != 'OK' # or msg == 'Success!'
+      #   puts 'Error: ' + msg
+      # elsif msg == 'You already checked out this issue'
+      #   puts 'Info: ' + msg
+      # end
 
-    response = http.request(request)
+      "#{status}: #{msg}"
+    end
 
-    # to check retrieve json and get codes
-    json = JSON.parse(response.body)
-    status = json['status']
-    msg = json['title']
-
-    # if status != 'OK' # or msg == 'Success!'
-    #   puts 'Error: ' + msg
-    # elsif msg == 'You already checked out this issue'
-    #   puts 'Info: ' + msg
-    # end
-
-    "#{status}: #{msg}"
-  end
-
-  def archived?(id)
-    url = 'http://www.rbdigital.com/southdublin/service/zinio/landing?mag_id='
-    content = get_request(url + id)
-    html = Nokogiri::HTML(content)
-    date = html.at_css('p.release_date')
-    back_only = date.children.at_css('span')
-    if !back_only.nil?
-      if back_only.content =~ /Only Back Issues Available/i
+    def archived?(id)
+      content = get_request(@start_page + "?mag_id=" + id.to_s)
+      html = Nokogiri::HTML(content)
+      # check for 'only back issues'
+      date = html.at_css('p.release_date')
+      back_only = date.children.at_css('span')
+      if !back_only.nil? && back_only.content =~ /only back issues.+available/i
         return true
       end
+      # check for 'one issue only'
+      info = html.at_css('div.addition_info')
+      issues = info.children.at_css('p:last-child')
+      if !issues.nil? && issues.content =~ /one issue only/i
+        return true
+      end
+      # otherwise its not archived
+      return false
     end
-    return false
-  end
 
-  private
+    private
 
-    def post_request(url, opts)
-      uri = URI.parse(url)
-      response = Net::HTTP.post_form(uri, opts)
-      # TODO: need to include new cookies without deleting
-      res_hash = response.to_hash
-      if res_hash.key?('set-cookie')
-        @cookies = ''
-        res_hash['set-cookie'].each do |c|
-          if c !~ /deleted/ # deleted values appearing with same names
-            if c =~ /^(.*?;)/
-              @cookies += $1
+      def post_request(url, opts)
+        uri = URI.parse(url)
+        response = Net::HTTP.post_form(uri, opts)
+        # TODO: need to include new cookies without deleting
+        res_hash = response.to_hash
+        if res_hash.key?('set-cookie')
+          @cookies = ''
+          res_hash['set-cookie'].each do |c|
+            if c !~ /deleted/ # deleted values appearing with same names
+              if c =~ /^(.*?;)/
+                @cookies += $1
+              end
             end
           end
+          # original , each entry grab first section before ; and join to string
+          #@cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
         end
-        # original , each entry grab first section before ; and join to string
-        #@cookies = res_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join
+        response.body
       end
-      response.body
-    end
 
-    def get_request(url)
-      if url !~ /^http/i
-        get_local(url)
-      else
-        get_remote(url)
+      def get_request(url)
+        uri = URI.parse(url)
+        http = Net::HTTP.new(uri.host, uri.port)
+        request = Net::HTTP::Get.new(uri.request_uri)
+        request['Cookie'] = @cookies
+        response = http.request(request)
+        # TODO: need to check for new cookies?
+        response.body
       end
-    end
 
-    def get_local(path)
-      output = ''
-      File.foreach(path){ |line| output += line }
-      output
-    end
+  end
 
-    def get_remote(url)
-      uri = URI.parse(url)
-      http = Net::HTTP.new(uri.host, uri.port)
-      request = Net::HTTP::Get.new(uri.request_uri)
-      request['Cookie'] = @cookies
-      response = http.request(request)
-      # TODO: need to check for new cookies?
-      response.body
-    end
 end
