@@ -5,7 +5,7 @@ module App
 
     def initialize(title, id, cover_url)
       @title = title
-      @id = id
+      @id = id.to_i
       @cover_url = cover_url
     end
 

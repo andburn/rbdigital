@@ -1,35 +1,14 @@
 require 'optparse'
-#require 'ruby_gntp'
 
 require_relative 'library'
 require_relative 'patron'
 require_relative 'storage'
+require_relative 'utils'
+require_relative 'app'
 
-LOG_FILE = File.expand_path('data/log.txt', File.join(File.dirname(__FILE__), '..'))
-DATA_FILE = '/media/Portable/Media/Storage/rbdigital/log.txt';
-START_PAGE = 'http://www.rbdigital.com/southdublin/service/zinio/landing/'
-
-def log(message)
-  log_string = Time.now.strftime('[%Y-%m-%d %H:%M:%S] ') + message + "\n"
-  File.open(LOG_FILE, 'a+') do |f|
-    f.write(log_string)
-  end
-  File.open(DATA_FILE, 'a+') do |f|
-    f.write(log_string)
-  end
-end
-
-def growl(message)
-  # icon_url = '<project_dir>/images/zinio_icon.png'
-  #
-  # GNTP.notify({
-  #                 :app_name => 'Zinio Update',
-  #                 :title    => 'New issues found',
-  #                 :text     => message,
-  #                 :icon     => icon_url
-  #             })
-  log(message)
-end
+# load config
+# App::Config.load("config.yaml")
+# logger = App::Logger.new
 
 def checkout_all(library, storage, list)
   checkout = {}
@@ -52,10 +31,12 @@ def checkout_all(library, storage, list)
     patron = storage.get_patron(p)
     library.log_out
     library.log_in(patron)
+    # TODO doesn't seem necessary!
     errors = true unless library.logged_in?
     if not library.logged_in?
       errors = true
       log 'login error for ' + patron.user_name
+      # TODO should probably return here too
     end
     # for each subscribed checkout
     checkout[p].each do |id|
@@ -72,28 +53,8 @@ def checkout_all(library, storage, list)
   errors
 end
 
-
-#log("Script starting...")
-# NOTE: alternative to optparse http://docopt.org/
-options = {}
-OptionParser.new do |opts|
-  opts.banner = 'Usage: start.rb [options]'
-
-  opts.on('-s', '--subscribe') { options[:subscribe] = true }
-  opts.on('-u', '--update') { options[:update] = true }
-
-  opts.on('-p', '--patron NAME') do |v|
-    options[:patron] = v
-  end
-end.parse!
-
-# set up objects
-library = Library.new(START_PAGE)
-storage = Storage.new
-
-# subscribe takes precedence over update (should be mutually exclusive)
-if options[:subscribe] && !options[:patron].empty?
-  patron = storage.get_patron(options[:patron])
+def subscribe(patron)
+  patron = storage.get_patron(patron)
   current = library.build_catalogue
   dead = []
   current.each_with_index do |m, i|
@@ -129,10 +90,21 @@ if options[:subscribe] && !options[:patron].empty?
     mag = current[index]
     storage.add_subscription(mag.id, mag.title, patron.user_name)
   end
-elsif options[:update]
+end
+
+def catalogue()
   previous = storage.load_catalogue
   current = library.build_catalogue
-  growl('Magazine selection changed!') if previous.length != current.length
+  log('Magazine selection changed!') if previous.length != current.length
+end
+
+def update()
+  # get list of subscribed items
+
+  # check individual pages for update
+
+  # checkout new
+
   updates = []
   message = ''
   current.each do |mag|
@@ -148,8 +120,41 @@ elsif options[:update]
   end
   errors = checkout_all(library, storage, updates)
   unless errors
-    growl(message) unless message.empty?
+    log(message) unless message.empty?
     storage.save_catalogue(current)
   end
 end
-#log("...finished.")
+
+def main()
+  options = {}
+  OptionParser.new do |opts|
+    opts.banner = 'Usage: start.rb [options]'
+    # update is the default
+    opts.on('-u', '--update') { options[:update] = true }
+    # add progress info to output
+    opts.on('-v', '--verbose') { options[:verbose] = true }
+    # overrides update (even if '-u' specified)
+    opts.on('-s', '--subscribe') { options[:subscribe] = true }
+    # to be used with subscribe
+    opts.on('-p', '--patron NAME') do |v|
+      options[:patron] = v
+    end
+  end.parse!
+
+  # set up objects
+  library = App::Library.new(
+    App::Config.settings["landing_page"], App::Config.settings["library_id"])
+  storage = App::Storage.new
+
+
+  if options[:subscribe] && options[:patron]
+    subscribe(options[:patron])
+  elsif options[:update]
+    update()
+  end
+end
+
+
+if __FILE__ == $0
+    main()
+end
