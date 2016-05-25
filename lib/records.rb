@@ -36,10 +36,13 @@ module App
     end
 
     def patrons
+      pats = []
       if @config.has_key?("patrons")
-        return @config["patrons"]
+        @config["patrons"].each do |k,v|
+          pats << Patron.new(k, v["email"], v["password"], v["subscriptions"])
+        end
       end
-      nil
+      pats
     end
 
     def get_patron(name)
@@ -54,30 +57,10 @@ module App
       subs = []
       unless patrons.nil?
         patrons.each do |p|
-          # merge arrays and make unique === (a+b).uniq
-          subs = subs | p.subscriptions
+          subs = subs | p.subs
         end
       end
       subs
-    end
-
-    def add_subscription(id, user_name)
-      # p = get_patron(user_name)
-      # unless p.nil?
-      #   p.subsc
-      # end
-
-      current = get_subscription(id)
-      if current.nil?
-        write_to_file(@subscription_file, "#{id},#{title},#{user_name}\n")
-      else
-        detail = current.split(/,/)
-        return nil if detail.length != 3
-        unless detail[2] =~ /#{user_name}/i
-          modify_line_in_file(@subscription_file, current,
-            "#{current}:#{user_name}")
-        end
-      end
     end
 
     def save_catalogue(catalogue, backup=false)

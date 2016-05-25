@@ -14,6 +14,27 @@ describe 'records' do
 
 	describe 'config' do
 
+		it 'should be able to get setttings hash' do
+			allow(YAML).to receive(:load_file).and_return({
+	      "settings" => { "library_id" => 2389 }
+	    })
+			records = App::Records.instance
+			records.load("file.txt")
+			expect(records.settings['library_id']).to eq(2389)
+		end
+
+		it 'should be able to get all patrons' do
+			allow(YAML).to receive(:load_file).and_return({
+	      "patrons" => {
+					"first" => { "email" => "person1", "password" => "1", "subscriptions" => [1, 2, 3] },
+					"second" => { "email" => "person2", "password" => "2", "subscriptions" => [1, 2, 5, 6] }
+				}
+	    })
+			records = App::Records.instance
+			records.load("file.txt")
+			expect(records.patrons.length).to eq(2)
+		end
+
 		it 'should get patron from config' do
 	    allow(YAML).to receive(:load_file).and_return({
 	      "patrons" => {"Bill" => { "email" => "bill@email.com", "password" => "Xzy00", "subscriptions" => [ 1, 2 ] }}
@@ -50,6 +71,23 @@ describe 'records' do
 			records.load("config.txt")
 			records.save("config.txt")
 			expect(buffer.string).to eq("---\nsettings:\n  a: b\n")
+		end
+
+	end
+
+	describe 'subscriptions' do
+
+		it 'should merge all patrons subscriptions together without duplicates' do
+			allow(YAML).to receive(:load_file).and_return({
+				"patrons" => {
+					"a" => { "subscriptions" => [ 1, 2, 3 ] },
+					"b" => { "subscriptions" => [ 2, 3 ] },
+					"c" => { "subscriptions" => [ 1, 6, 2 ] }
+				}
+			})
+			records = App::Records.instance
+			records.load("file.txt")
+			expect(records.subscriptions.sort).to eq([1, 2, 3, 6])
 		end
 
 	end
