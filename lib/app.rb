@@ -7,47 +7,37 @@ require_relative 'utils'
 
 module App
 
-
-	def self.checkout_all(library, storage, list)
+	def self.checkout_all(library, records, updates)
 	  checkout = {}
 	  errors = false
-	  list.each do |l|
-	    e = l.split(/,/)
-	    if e.length == 3
-	      names = e[2].split(/:/)
-	      names.each do |n|
-	        if checkout.key?(n)
-	          checkout[n] << e[0]
-	        else
-	          checkout[n] = [e[0]]
-	        end
-	      end
-	    end
-	  end
-	  # login in for each and checkout
-	  checkout.each_key do |p|
-	    patron = storage.get_patron(p)
-	    library.log_out
-	    library.log_in(patron)
-	    # TODO doesn't seem necessary!
-	    errors = true unless library.logged_in?
-	    if not library.logged_in?
-	      errors = true
-	      log 'login error for ' + patron.user_name
-	      # TODO should probably return here too
-	    end
-	    # for each subscribed checkout
-	    checkout[p].each do |id|
-	      status = library.checkout(id)
-	      if status =~ /^ERR/i
-	        log "#{status} (#{patron.user_name} - #{id})"
-	        errors = true
-	      elsif status =~ /already/i
-	        log "#{status} (#{patron.user_name} - #{id})"
-	      end
-	      sleep(20)
-	    end
-	  end
+
+		records.patrons.each do |patron|
+			# get updatable subs
+			usubs = patron.subs & updates
+			if not usubs.empty?
+				library.log_out
+		    library.log_in(patron)
+				errors = false
+		    if not library.logged_in?
+		      errors = true
+		      @@logger.error('login error for ' + patron.user_name)
+		      next
+		    end
+				# checkout each sub
+		    usubs.each do |id|
+		      status = library.checkout(id)
+					puts "#{id}: #{status}"
+		      if status =~ /^ERR/i
+		        @@logger.error("#{status} (#{patron.user_name} - #{id})")
+		        errors = true
+		      elsif status =~ /already/i
+		        @@logger.error("#{status} (#{patron.user_name} - #{id})")
+		      end
+		      sleep(30)
+		    end
+			end
+		end
+
 	  errors
 	end
 
@@ -55,15 +45,13 @@ module App
 	  catalogue = record.load_catalogue
 		mags_by_id = {}
 		catalogue.each { |m| mags_by_id[m.id] = m }
-		record.patrons.each do |obj|
-			obj.each do |k,v|
-				puts "---- #{k}"
-				v["subscriptions"].each do |s|
-					if mags_by_id.has_key?(s)
-						puts mags_by_id[s]
-					else
-						puts "Not found: #{s}"
-					end
+		record.patrons.each do |p|
+			puts "\n[#{p.user_name}] ----"
+			p.subs.each do |s|
+				if mags_by_id.has_key?(s)
+					puts mags_by_id[s]
+				else
+					puts "Not found: #{s}"
 				end
 			end
 		end
@@ -80,29 +68,32 @@ module App
 		change = current.length - previous.length
 		if change != 0
 			@@logger.info("Magazine selection has changed (#{change})")
+			log_change(previous, current)
 		end
 	end
 
 	def self.update(library, records)
+		updates = []
+		message = ''
 		previous = records.load_catalogue
 		current = library.build_catalogue
-	  updates = []
-	  message = ''
+		subscriptions = records.subscriptions
+
 	  current.each do |mag|
 	    # find updated magazines
 	    unless previous.include? mag
 	      # that are subscribed to
-	      sub = storage.get_subscription(mag.id)
-	      unless sub.nil?
-	        updates << sub
+	      if subscriptions.include? mag.id
+					updates << mag.id
 	        message += mag.title + ', '
-	      end
+				end
 	    end
 	  end
-	  errors = checkout_all(library, storage, updates)
+	  errors = checkout_all(library, records, updates)
 	  unless errors
-	    log(message) unless message.empty?
-	    storage.save_catalogue(current)
+	    @@logger.info(message) unless message.empty?
+			records.save_catalogue(previous, true)
+			records.save_catalogue(current, false)
 	  end
 	end
 
@@ -127,8 +118,8 @@ module App
 			return
 		end
 
-		@@logger = Logger.new(
-			records.settings['log_file'], LogLevel::INFO)
+		 @@logger = Logger.new(
+		 	records.settings['log_file'], LogLevel::DEBUG)
 
 	  # set up objects
 	  library = App::Library.new(
@@ -140,6 +131,25 @@ module App
 		catalogue(library, records) if options[:catalogue]
 
 	end
+
+	private
+
+		def self.log_change(previous, current)
+			prev_hash = {}
+			current_hash = {}
+			previous.each { |p| prev_hash[p.id] = p.title }
+			current.each { |c| current_hash[c.id] = c.title }
+			current_hash.each_pair do |k,v|
+				if !prev_hash.has_key?(k)
+					@@logger.info("NEW: #{v} (#{k})")
+				end
+			end
+			prev_hash.each_pair do |k,v|
+				if !current_hash.has_key?(k)
+					@@logger.info("DEL: #{v} (#{k})")
+				end
+			end
+		end
 
 end
 

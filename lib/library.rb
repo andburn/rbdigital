@@ -143,6 +143,7 @@ module App
       if !issues.nil? && issues.content =~ /one issue only/i
         return true
       end
+      ## also 'no. of issues: na'
       # otherwise its not archived
       return false
     end

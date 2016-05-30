@@ -32,7 +32,7 @@ describe 'records' do
 	    })
 			records = App::Records.instance
 			records.load("file.txt")
-			expect(records.patrons.length).to eq(2)
+			expect(records.patrons[0].user_name).to eq("first")
 		end
 
 		it 'should get patron from config' do

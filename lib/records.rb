@@ -38,8 +38,12 @@ module App
     def patrons
       pats = []
       if @config.has_key?("patrons")
-        @config["patrons"].each do |k,v|
-          pats << Patron.new(k, v["email"], v["password"], v["subscriptions"])
+        @config["patrons"].each do |p|
+          if p.keys.length == 1
+            key = p.keys[0]
+            pats << Patron.new(key,
+              p[key]["email"], p[key]["password"], p[key]["subscriptions"])
+          end
         end
       end
       pats
