@@ -11,11 +11,11 @@ module App
     end
 
     def ==(mag)
-      self.id == mag.id
+      @id == mag.id
     end
 
     def has_same_cover?(mag)
-      self.cover_id == mag.cover_id
+      @cover_id == mag.cover_id
     end
 
     def to_s
