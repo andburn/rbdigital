@@ -2,13 +2,14 @@ module App
 
   class Logger
 
-    attr_reader :level, :file
+    include Singleton
 
-    def initialize(log_file=nil, level=LogLevel::DEBUG)
-      @level = level
-      config_log_file = 'log.txt'
-      config_log_file = log_file unless log_file.nil?
-      @file = File.expand_path(config_log_file, File.join(File.dirname(__FILE__), '..'))
+    attr_accessor :level, :file
+
+    def initialize
+      # set default attribs
+      @level = LogLevel::DEBUG
+      @file = 'log.txt'
     end
 
     def log(message, level=LogLevel::DEBUG)
