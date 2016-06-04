@@ -32,14 +32,15 @@ describe 'records' do
 	    })
 			records = App::Records.instance
 			records.load("file.txt")
-			expect(records.patrons[0].user_name).to eq("first")
+			expect(records.patrons.length).to eq 2
+			expect(records.patrons[0].name).to eq("first")
 		end
 
 		it 'should get patron from config' do
 	    allow(YAML).to receive(:load_file).and_return({
 	      "patrons" => {"Bill" => { "email" => "bill@email.com", "password" => "Xzy00", "subscriptions" => [ 1, 2 ] }}
 	    })
-	    bill = instance_double("Patron", :user_name => "Bill", :email => "bill@email.com",
+	    bill = instance_double("Patron", :name => "Bill", :email => "bill@email.com",
 				:password => "Xzy00", :subscriptions => [1, 2])
 			records = App::Records.instance
 			records.load("file.txt")
@@ -73,6 +74,15 @@ describe 'records' do
 			expect(buffer.string).to eq("---\nsettings:\n  a: b\n")
 		end
 
+		it 'should load log_file path' do
+			allow(YAML).to receive(:load_file).and_return({
+	      "settings" => { "log_file" => "log.txt" }
+	    })
+			records = App::Records.instance
+			records.load("file.txt")
+			expect(records.log_file).to match(/log\.txt$/)
+		end
+
 	end
 
 	describe 'subscriptions' do
@@ -88,6 +98,21 @@ describe 'records' do
 			records = App::Records.instance
 			records.load("file.txt")
 			expect(records.subscriptions.sort).to eq([1, 2, 3, 6])
+		end
+
+	end
+
+	describe 'catalogue' do
+
+		it 'should save list to file' do
+			buffer = StringIO.new
+			allow(File).to receive(:open).and_yield(buffer)
+	    list = [
+				instance_double("Magazine", :id => 123, :title => 'one', :cover_id => 38348),
+				instance_double("Magazine", :id => 321, :title => 'two', :cover_id => 548976),
+			]
+			App::Records.instance.save_catalogue(list)
+			expect(buffer.string).to match(/123;one;38348\n321;two;548976/)
 		end
 
 	end

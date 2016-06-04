@@ -9,7 +9,7 @@ module App
 
     include Singleton
 
-    attr_reader :config_file, :catalogue_file
+    attr_reader :config_file, :catalogue_file, :log_file
 
     def load(file)
       @config_file = file
@@ -18,6 +18,12 @@ module App
       if @config.has_key?('settings') && @config['settings'].has_key?('catalogue_file')
         @catalogue_file = File.expand_path(
           @config['settings']['catalogue_file'],
+          File.join(File.dirname(__FILE__), '..'))
+      end
+      @log_file = nil
+      if @config.has_key?('settings') && @config['settings'].has_key?('log_file')
+        @log_file = File.expand_path(
+          @config['settings']['log_file'],
           File.join(File.dirname(__FILE__), '..'))
       end
     end
@@ -39,10 +45,9 @@ module App
       pats = []
       if @config.has_key?("patrons")
         @config["patrons"].each do |p|
-          if p.keys.length == 1
-            key = p.keys[0]
-            pats << Patron.new(key,
-              p[key]["email"], p[key]["password"], p[key]["subscriptions"])
+          if p.length == 2
+            pats << Patron.new(p[0],
+              p[1]["email"], p[1]["password"], p[1]["subscriptions"])
           end
         end
       end
@@ -71,7 +76,7 @@ module App
       file = backup ? @catalogue_file + ".bak" : @catalogue_file
       output = ''
       catalogue.each do |mag|
-        output += "#{mag.id};#{mag.title};#{mag.cover_url}\n"
+        output += "#{mag.id};#{mag.title};#{mag.cover_id}\n"
       end
       unless output.empty?
         write_to_file(file, output, false)
@@ -101,21 +106,6 @@ module App
       def load_file_to_array(filename)
         return nil unless File.exist?(filename)
         File.open(filename, 'r').readlines
-      end
-
-      def modify_line_in_file(filename, old, new)
-        return nil unless File.exist?(filename)
-        lines = File.open(filename, 'r').readlines
-        lines.each_with_index do |line, i|
-          if line =~ /^#{old}/
-            lines[i] = new + "\n"
-          end
-        end
-        File.open(filename, 'w+') do |f|
-          lines.each do |line|
-            f.write(line)
-          end
-        end
       end
 
   end
