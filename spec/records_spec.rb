@@ -25,10 +25,10 @@ describe 'records' do
 
 		it 'should be able to get all patrons' do
 			allow(YAML).to receive(:load_file).and_return({
-	      "patrons" => {
-					"first" => { "email" => "person1", "password" => "1", "subscriptions" => [1, 2, 3] },
-					"second" => { "email" => "person2", "password" => "2", "subscriptions" => [1, 2, 5, 6] }
-				}
+	      "patrons" => [
+					{"first" => { "email" => "person1", "password" => "1", "subscriptions" => [1, 2, 3] }},
+					{"second" => { "email" => "person2", "password" => "2", "subscriptions" => [1, 2, 5, 6] }}
+				]
 	    })
 			records = App::Records.instance
 			records.load("file.txt")
@@ -89,11 +89,11 @@ describe 'records' do
 
 		it 'should merge all patrons subscriptions together without duplicates' do
 			allow(YAML).to receive(:load_file).and_return({
-				"patrons" => {
-					"a" => { "subscriptions" => [ 1, 2, 3 ] },
-					"b" => { "subscriptions" => [ 2, 3 ] },
-					"c" => { "subscriptions" => [ 1, 6, 2 ] }
-				}
+				"patrons" => [
+					{"a" => { "subscriptions" => [ 1, 2, 3 ] }},
+					{"b" => { "subscriptions" => [ 2, 3 ] }},
+					{"c" => { "subscriptions" => [ 1, 6, 2 ] }}
+				]
 			})
 			records = App::Records.instance
 			records.load("file.txt")

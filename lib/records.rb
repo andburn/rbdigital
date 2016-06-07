@@ -45,9 +45,10 @@ module App
       pats = []
       if @config.has_key?("patrons")
         @config["patrons"].each do |p|
-          if p.length == 2
-            pats << Patron.new(p[0],
-              p[1]["email"], p[1]["password"], p[1]["subscriptions"])
+          if p.keys.length == 1
+            key = p.keys[0]
+            pats << Patron.new(key,
+              p[key]["email"], p[key]["password"], p[key]["subscriptions"])
           end
         end
       end
