@@ -11,29 +11,35 @@ module App
 	  checkout = {}
 	  errors = false
 
+		puts "#{updates.length} updates"
 		records.patrons.each do |patron|
+			puts "User: #{patron.name}"
 			# get updatable subs
 			usubs = patron.subs & updates
+			puts "Updates: #{usubs}"
 			if not usubs.empty?
 				library.log_out
 		    library.log_in(patron)
 				errors = false
 		    if not library.logged_in?
 		      errors = true
-		      @@logger.error('login error for ' + patron.user_name)
+		      @@logger.error('login error for ' + patron.user)
 		      next
 		    end
 				# checkout each sub
 		    usubs.each do |id|
+					puts "Checking out #{id}"
+					# need to sleep between checkouts or errors
+					sleep(30)
+					# checkout the latest issue
 		      status = library.checkout(id)
-					puts "#{id}: #{status}"
 		      if status =~ /^ERR/i
-		        @@logger.error("#{status} (#{patron.user_name} - #{id})")
+		        @@logger.error("#{status} (#{patron.name} - #{id})")
 		        errors = true
+					# doesn't seem to happen anymore
 		      elsif status =~ /already/i
-		        @@logger.error("#{status} (#{patron.user_name} - #{id})")
+		        @@logger.error("#{status} (#{patron.name} - #{id})")
 		      end
-		      sleep(30)
 		    end
 			end
 		end
@@ -41,12 +47,12 @@ module App
 	  errors
 	end
 
-	def self.subscribe(record)
-	  catalogue = record.load_catalogue
+	def self.subscriptions(record)
+		catalogue = record.load_catalogue
 		mags_by_id = {}
 		catalogue.each { |m| mags_by_id[m.id] = m }
 		record.patrons.each do |p|
-			puts "\n[#{p.user_name}] ----"
+			puts "\n[#{p.name}] ----"
 			p.subs.each do |s|
 				if mags_by_id.has_key?(s)
 					puts mags_by_id[s]
@@ -72,28 +78,45 @@ module App
 		end
 	end
 
-	def self.update(library, records)
+	def self.get_updated(library, records)
 		updates = []
 		message = ''
 		previous = records.load_catalogue
 		current = library.build_catalogue
 		subscriptions = records.subscriptions
+		previous_by_id = {}
+		previous.each { |p| previous_by_id[p.id] = p }
 
 	  current.each do |mag|
+			new_issue = false
 	    # find updated magazines
-	    unless previous.include? mag
-	      # that are subscribed to
-	      if subscriptions.include? mag.id
-					updates << mag.id
-	        message += mag.title + ', '
+	    if previous_by_id.has_key? mag.id
+				unless mag.has_same_cover?(previous_by_id[mag.id])
+					new_issue = true
 				end
-	    end
+			else
+				# just add it no comparison possible
+				new_issue = true
+			end
+			# that are subscribed to
+			if subscriptions.include? mag.id and new_issue
+				updates << mag.id
+				message += mag.title + ', '
+			end
 	  end
-	  errors = checkout_all(library, records, updates)
+
+		records.save_catalogue(previous, true)
+		records.save_catalogue(current, false)
+
+		return { :updates => updates, :message => message }
+	end
+
+	def self.update(library, records)
+		new_issues = get_updated(library, records)
+	  errors = checkout_all(library, records, new_issues[:updates])
 	  unless errors
+			message = new_issues[:message]
 	    @@logger.info(message) unless message.empty?
-			records.save_catalogue(previous, true)
-			records.save_catalogue(current, false)
 	  end
 	end
 
@@ -110,7 +133,7 @@ module App
 	  end.parse!
 
 		# load config
-		records = App::Records.instance
+		records = Records.instance
 		config_file = File.expand_path('config.yaml', File.join(File.dirname(__FILE__), '..'))
 		records.load(config_file)
 		if records.settings.nil? || records.patrons.nil?
@@ -118,16 +141,17 @@ module App
 			return
 		end
 
-		 @@logger = Logger.new(
-		 	records.settings['log_file'], LogLevel::DEBUG)
+		@@logger = Logger.instance
+		@@logger.file = records.settings['log_file']
+		@@logger.level = LogLevel::DEBUG
 
 	  # set up objects
-	  library = App::Library.new(
+	  library = Library.new(
 	    records.settings["landing_page"], records.settings["library_id"])
 
 		# perform actions
 		update(library, records) if options[:update]
-	  subscribe(records) if options[:subscriptions]
+	  subscriptions(records) if options[:subscriptions]
 		catalogue(library, records) if options[:catalogue]
 
 	end

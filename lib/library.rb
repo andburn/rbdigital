@@ -83,8 +83,13 @@ module App
           anchor = m.children.at_css('a')
           if anchor[:href] =~ /mag_id=(\d+)$/
             img = anchor.children.at_css('img')
-            mag = Magazine.new(anchor[:title], $1, img[:src])
-            magazines << mag
+            mag_id = $1
+            if img[:src] =~ %r!imgs.zinio.com/\w+/\d+/\d+/(\d+)/\w+.jpg!
+              mag = Magazine.new(anchor[:title], mag_id, $1)
+              magazines << mag
+            else
+              Logger.instance.error("img url format error #{img[:src]}")
+            end
           end
         end
         # get the total number of available pages
@@ -104,7 +109,6 @@ module App
     end
 
     def checkout(id)
-
       uri = URI.parse(CHECKOUT_URL)
 
       http = Net::HTTP.new(uri.host, uri.port)
@@ -113,17 +117,10 @@ module App
       request['Cookie'] = @cookies
 
       response = http.request(request)
-
       # to check retrieve json and get codes
       json = JSON.parse(response.body)
       status = json['status']
       msg = json['title']
-
-      # if status != 'OK' # or msg == 'Success!'
-      #   puts 'Error: ' + msg
-      # elsif msg == 'You already checked out this issue'
-      #   puts 'Info: ' + msg
-      # end
 
       "#{status}: #{msg}"
     end
@@ -140,10 +137,9 @@ module App
       # check for 'one issue only'
       info = html.at_css('div.addition_info')
       issues = info.children.at_css('p:last-child')
-      if !issues.nil? && issues.content =~ /one issue only/i
+      if !issues.nil? && issues.content =~ /(one issue only)|(na)/i
         return true
       end
-      ## also 'no. of issues: na'
       # otherwise its not archived
       return false
     end

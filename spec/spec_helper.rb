@@ -13,10 +13,9 @@ end
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
-#require_relative '../lib/app'
+require_relative '../lib/app'
 require_relative '../lib/magazine'
 require_relative '../lib/library'
 require_relative '../lib/patron'
 require_relative '../lib/records'
-# require_relative '../lib/start'
 require_relative '../lib/utils'
