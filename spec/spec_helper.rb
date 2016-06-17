@@ -1,4 +1,5 @@
 require 'rspec'
+require 'coveralls'
 require 'simplecov'
 require 'webmock/rspec'
 require_relative 'helpers'
@@ -7,6 +8,7 @@ RSpec.configure do |c|
   c.include Helpers
 end
 
+SimpleCov.formatter = Coveralls::SimpleCov::Formatter
 SimpleCov.start do
   add_filter 'spec' # ignore specs
 end

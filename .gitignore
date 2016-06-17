@@ -1,3 +1,4 @@
 /data/
 coverage
 config.yaml
+Gemfile.lock
