@@ -4,7 +4,7 @@ source "https://rubygems.org"
 gem 'nokogiri'
 
 group :test do
-	gem 'coveralls', require: false
+	gem 'coveralls'
 	gem 'rspec'
 	gem 'simplecov'
 	gem 'webmock'

@@ -123,7 +123,7 @@ module App
 	def self.main()
 	  options = {}
 	  OptionParser.new do |opts|
-	    opts.banner = 'Usage: start.rb [options]'
+	    opts.banner = 'Usage: app.rb [options]'
 	    # show subscriptions by user & title
 	    opts.on('-s', '--subscriptions') { options[:subscriptions] = true }
 			# rebuild catalogue and compare with previous version

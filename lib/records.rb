@@ -87,10 +87,12 @@ module App
     def load_catalogue
       magazines = []
       catalogue = load_file_to_array(@catalogue_file)
-      catalogue.each do |c|
-        m = c.split(/;/)
-        next unless m.length == 3
-        magazines << Magazine.new(m[1], m[0], m[2])
+      unless catalogue.nil?
+        catalogue.each do |c|
+          m = c.split(/;/)
+          next unless m.length == 3
+          magazines << Magazine.new(m[1], m[0], m[2])
+        end
       end
       magazines
     end
