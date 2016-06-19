@@ -37,6 +37,7 @@ describe "Logger" do
 	it "should write message to file" do
 		buffer = StringIO.new
 		allow(File).to receive(:open).and_yield(buffer)
+		allow(File).to receive(:exists?).and_return true
 		@logger.log("some message")
 		expect(buffer.string).to match(/some message/)
 	end

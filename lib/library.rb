@@ -116,11 +116,17 @@ module App
       request.set_form_data({:lib_id => @id, :mag_id => id})
       request['Cookie'] = @cookies
 
-      response = http.request(request)
-      # to check retrieve json and get codes
-      json = JSON.parse(response.body)
-      status = json['status']
-      msg = json['title']
+			staus = msg = ''
+			begin
+	      response = http.request(request)
+	      # to check retrieve json and get codes
+	      json = JSON.parse(response.body)
+	      status = json['status']
+	      msg = json['title']
+			rescue Net::ReadTimeout
+				# TODO edit catalogue entry so picked up next time
+				App::Logger.instance.error("Net timeout on #{id}")
+			end
 
       "#{status}: #{msg}"
     end

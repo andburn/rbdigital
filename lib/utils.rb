@@ -14,6 +14,7 @@ module App
 
     def log(message, level=LogLevel::DEBUG)
       return if level < @level
+      return unless File.exists?(@file)
       log_string = Time.now.strftime('[%Y-%m-%d %H:%M:%S] ') + message + "\n"
       File.open(@file, 'a+') do |f|
         f.write(log_string)
