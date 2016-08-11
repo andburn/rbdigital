@@ -11,34 +11,34 @@ module App
 	  checkout = {}
 	  errors = false
 
-		puts "#{updates.length} updates"
+		Logger.instance.info("#{updates.length} updates")
 		records.patrons.each do |patron|
-			puts "User: #{patron.name}"
+			Logger.instance.info("User: #{patron.name}")
 			# get updatable subs
 			usubs = patron.subs & updates
-			puts "Updates: #{usubs}"
+			Logger.instance.info("Updates: #{usubs}")
 			if not usubs.empty?
 				library.log_out
 		    library.log_in(patron)
 				errors = false
 		    if not library.logged_in?
 		      errors = true
-		      @@logger.error('login error for ' + patron.user)
+		      Logger.instance.error('login error for ' + patron.user)
 		      next
 		    end
 				# checkout each sub
 		    usubs.each do |id|
-					puts "Checking out #{id}"
+					Logger.instance.info("Checking out #{id}")
 					# need to sleep between checkouts or errors
 					sleep(30)
 					# checkout the latest issue
 		      status = library.checkout(id)
 		      if status =~ /^ERR/i
-		        @@logger.error("#{status} (#{patron.name} - #{id})")
+		        Logger.instance.error("#{status} (#{patron.name} - #{id})")
 		        errors = true
 					# doesn't seem to happen anymore
 		      elsif status =~ /already/i
-		        @@logger.error("#{status} (#{patron.name} - #{id})")
+		        Logger.instance.error("#{status} (#{patron.name} - #{id})")
 		      end
 		    end
 			end
@@ -67,13 +67,13 @@ module App
 	  previous = records.load_catalogue
 		current = library.build_catalogue
 		if current.length <= 0
-			@@logger.error("Error building live catalogue")
+			Logger.instance.error("Error building live catalogue")
 		end
 		records.save_catalogue(previous, true)
 		records.save_catalogue(current, false)
 		change = current.length - previous.length
 		if change != 0
-			@@logger.info("Magazine selection has changed (#{change})")
+			Logger.instance.info("Magazine selection has changed (#{change})")
 			log_change(previous, current)
 		end
 	end
@@ -116,7 +116,7 @@ module App
 	  errors = checkout_all(library, records, new_issues[:updates])
 	  unless errors
 			message = new_issues[:message]
-	    @@logger.info(message) unless message.empty?
+	    Logger.instance.info(message) unless message.empty?
 	  end
 	end
 
@@ -137,13 +137,12 @@ module App
 		config_file = File.expand_path('config.yaml', File.join(File.dirname(__FILE__), '..'))
 		records.load(config_file)
 		if records.settings.nil? || records.patrons.nil?
-			puts "Configuration file is invalid (missing required sections)"
+			Logger.instance.info("Configuration file is invalid (missing required sections)")
 			return
 		end
 
-		@@logger = Logger.instance
-		@@logger.file = records.settings['log_file']
-		@@logger.level = LogLevel::DEBUG
+		Logger.instance.file = records.settings['log_file']
+		Logger.instance.level = LogLevel::DEBUG
 
 	  # set up objects
 	  library = Library.new(
@@ -165,12 +164,12 @@ module App
 			current.each { |c| current_hash[c.id] = c.title }
 			current_hash.each_pair do |k,v|
 				if !prev_hash.has_key?(k)
-					@@logger.info("NEW: #{v} (#{k})")
+					Logger.instance.info("NEW: #{v} (#{k})")
 				end
 			end
 			prev_hash.each_pair do |k,v|
 				if !current_hash.has_key?(k)
-					@@logger.info("DEL: #{v} (#{k})")
+					Logger.instance.info("DEL: #{v} (#{k})")
 				end
 			end
 		end

@@ -88,7 +88,7 @@ module App
               mag = Magazine.new(anchor[:title], mag_id, $1)
               magazines << mag
             else
-              Logger.instance.error("img url format error #{img[:src]}")
+              App::Logger.instance.error("img url format error #{img[:src]}")
             end
           end
         end
