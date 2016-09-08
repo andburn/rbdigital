@@ -23,7 +23,7 @@ module App
 				errors = false
 		    if not library.logged_in?
 		      errors = true
-		      Logger.instance.error('login error for ' + patron.user)
+		      Logger.instance.error('login error for ' + patron.name)
 		      next
 		    end
 				# checkout each sub
