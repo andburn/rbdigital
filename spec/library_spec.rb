@@ -40,7 +40,7 @@ describe 'Library' do
         "http://www.rbdigital.com/ajaxd.php?action=p_login").
         with(
           :body => {
-            "email" => "tim@mail.com",
+            "username" => "tim@mail.com",
             "password" => "abc123",
             "lib_id" => @id,
             "remember_me" => "1"

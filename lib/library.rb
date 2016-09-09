@@ -25,7 +25,7 @@ module App
 
     def log_in(patron)
       post_request(LOGIN_URL, {
-          :email => patron.email,
+          :username => patron.email,
           :password => patron.password,
           :remember_me => 1,
           :lib_id => @id
