@@ -141,7 +141,10 @@ module App
 			return
 		end
 
-		Logger.instance.file = records.settings['log_file']
+		# get the log file relative to the parent dir of this script
+		Logger.instance.file = File.expand_path(
+			records.settings['log_file'],
+			File.join(File.dirname(__FILE__), '..'))
 		Logger.instance.level = LogLevel::DEBUG
 
 	  # set up objects
