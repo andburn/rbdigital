@@ -78,7 +78,7 @@ module App
 		end
 	end
 
-	def self.get_updated(library, records, force)
+	def self.get_updated(library, records)
 		updates = []
 		message = ''
 		previous = records.load_catalogue
@@ -91,7 +91,7 @@ module App
 			new_issue = false
 	    # find updated magazines
 	    if previous_by_id.has_key? mag.id
-				unless force || mag.has_same_cover?(previous_by_id[mag.id])
+				unless mag.has_same_cover?(previous_by_id[mag.id])
 					new_issue = true
 				end
 			else
@@ -112,7 +112,12 @@ module App
 	end
 
 	def self.update(library, records, force)
-		new_issues = get_updated(library, records, force)
+		new_issues = {}
+		if force
+			new_issues = { :updates => records.subscriptions, :message => "Forced" }
+		else
+			new_issues = get_updated(library, records, force)
+		end
 	  errors = checkout_all(library, records, new_issues[:updates])
 	  unless errors
 			message = new_issues[:message]
@@ -154,7 +159,7 @@ module App
 	    records.settings["landing_page"], records.settings["library_id"])
 
 		# perform actions
-		update(library, records) if options[:update]
+		update(library, records, false) if options[:update]
 		update(library, records, true) if options[:force]
 	  subscriptions(records) if options[:subscriptions]
 		catalogue(library, records) if options[:catalogue]
