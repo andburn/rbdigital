@@ -116,7 +116,7 @@ module App
 		if force
 			new_issues = { :updates => records.subscriptions, :message => "Forced" }
 		else
-			new_issues = get_updated(library, records, force)
+			new_issues = get_updated(library, records)
 		end
 	  errors = checkout_all(library, records, new_issues[:updates])
 	  unless errors
