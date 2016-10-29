@@ -111,9 +111,11 @@ module App
 		return { :updates => updates, :message => message }
 	end
 
-	def self.update(library, records, force)
+	def self.update(library, records, force, mag=nil)
 		new_issues = {}
-		if force
+		if !mag.nil? && !mag.empty?
+			new_issues = { :updates => [ mag.to_i ], :message => "Forced single"}
+		elsif force
 			new_issues = { :updates => records.subscriptions, :message => "Forced" }
 		else
 			new_issues = get_updated(library, records)
@@ -137,6 +139,8 @@ module App
 	    opts.on('-u', '--update') { options[:update] = true }
 			# force update all patron subscriptions and checkout all
 	    opts.on('-f', '--force') { options[:force] = true }
+			# force a single magazine
+			opts.on('-mMAG', '--force-mag=MAG') { |m| options[:mag] = m }
 	  end.parse!
 
 		# load config
@@ -161,6 +165,7 @@ module App
 		# perform actions
 		update(library, records, false) if options[:update]
 		update(library, records, true) if options[:force]
+		update(library, records, false, options[:mag]) if options[:mag]
 	  subscriptions(records) if options[:subscriptions]
 		catalogue(library, records) if options[:catalogue]
 
