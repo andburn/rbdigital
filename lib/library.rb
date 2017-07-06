@@ -116,7 +116,7 @@ module App
       request.set_form_data({:lib_id => @id, :mag_id => id})
       request['Cookie'] = @cookies
 
-			staus = msg = ''
+			status = msg = ''
 			begin
 	      response = http.request(request)
 	      # to check retrieve json and get codes
