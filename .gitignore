@@ -1,5 +1,10 @@
-/data
-/samples
-coverage
-config.yaml
-Gemfile.lock
+/.yardoc
+/Gemfile.lock
+/.bundle/
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/tmp/
+/spec/reports/
+/spec/data/
