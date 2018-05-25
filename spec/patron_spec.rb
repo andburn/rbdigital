@@ -1,7 +1,7 @@
 describe 'Patron' do
 
   before(:all) do
-    @patron = App::Patron.new('joe','joe@90.com', '4922', [1, 2])
+    @patron = Rbdigital::Patron.new('joe','joe@90.com', '4922', [1, 2])
   end
 
   it 'should be immutable' do
@@ -20,7 +20,7 @@ describe 'Patron' do
   end
 
   it 'should allow no subs param in constructor' do
-    expect(App::Patron.new('a','b', 'c').subs).to be_nil
+    expect(Rbdigital::Patron.new('a','b', 'c').subs).to be_nil
   end
 
   it 'should be converted to a string as name comma email' do
@@ -28,7 +28,7 @@ describe 'Patron' do
   end
 
   it 'should be equal if name and email are the same' do
-    expect(@patron).to eq(App::Patron.new('joe','joe@90.com', '234', [5]))
+    expect(@patron).to eq(Rbdigital::Patron.new('joe','joe@90.com', '234', [5]))
   end
 
 end

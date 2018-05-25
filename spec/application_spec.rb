@@ -1,4 +1,4 @@
-describe 'app' do
+describe 'Application' do
 
 		describe 'subscriptions' do
 
@@ -11,7 +11,7 @@ describe 'app' do
 					:name => "Name", :email => "Email", :password => "123", :subs => [231])
 				allow(record).to receive(:load_catalogue).and_return([magazine])
 				allow(record).to receive(:patrons).and_return([patron])
-				expect{ App.subscriptions(record) }.to output("\n[Name] ----\nTitle (231)\n").to_stdout
+				expect{ Rbdigital::Application.subscriptions(record) }.to output("\n[Name] ----\nTitle (231)\n").to_stdout
 			end
 
 			it 'should print not found if the magazine does not exist' do
@@ -20,7 +20,7 @@ describe 'app' do
 					:name => "Name", :email => "Email", :password => "123", :subs => [1])
 				allow(record).to receive(:load_catalogue).and_return([])
 				allow(record).to receive(:patrons).and_return([patron])
-				expect{ App.subscriptions(record) }.to output("\n[Name] ----\nNot found: 1\n").to_stdout
+				expect{ Rbdigital::Application.subscriptions(record) }.to output("\n[Name] ----\nNot found: 1\n").to_stdout
 			end
 
 		end
@@ -39,7 +39,7 @@ describe 'app' do
 				allow(library).to receive(:build_catalogue).and_return([magazine])
 				allow(magazine).to receive(:has_same_cover?).and_return(false)
 
-				expect(App.get_updated(library, record)).to eq({
+				expect(Rbdigital::Application.get_updated(library, record)).to eq({
 						:updates => [ 123 ],
 						:message => 'Title, '
 				})

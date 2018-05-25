@@ -1,7 +1,5 @@
-module App
-
+module Rbdigital
   class Magazine
-
     attr_reader :title, :id, :cover_id
 
     def initialize(title, id, cover_id)
@@ -21,7 +19,5 @@ module App
     def to_s
       "#{@title} (#{@id})"
     end
-
   end
-
 end

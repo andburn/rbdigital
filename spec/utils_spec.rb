@@ -1,30 +1,30 @@
 describe "Logger" do
 
 	before(:all) do
-		@logger = App::Logger.instance
+		@logger = Rbdigital::Logger.instance
 	end
 
 	before(:each) do
-		@logger.level = App::LogLevel::DEBUG
+		@logger.level = Rbdigital::LogLevel::DEBUG
 	end
 
 	describe 'as a sinlgeton' do
 
 		it 'should not have an accessible new method' do
-			expect{ App::Logger.new }.to raise_error(NoMethodError)
+			expect{ Rbdigital::Logger.new }.to raise_error(NoMethodError)
 		end
 
 		it 'should return the same object from instance method' do
-			expect(App::Logger.instance).to be(App::Logger.instance)
+			expect(Rbdigital::Logger.instance).to be(Rbdigital::Logger.instance)
 		end
 
 	end
 
 	it "should have mutatable loglevel attribute" do
-		@logger.level = App::LogLevel::ERROR
-		expect(@logger.level).to eq App::LogLevel::ERROR
-		@logger.level = App::LogLevel::INFO
-		expect(@logger.level).to eq App::LogLevel::INFO
+		@logger.level = Rbdigital::LogLevel::ERROR
+		expect(@logger.level).to eq Rbdigital::LogLevel::ERROR
+		@logger.level = Rbdigital::LogLevel::INFO
+		expect(@logger.level).to eq Rbdigital::LogLevel::INFO
 	end
 
 	it "should have mutatable file attribute" do
@@ -43,17 +43,17 @@ describe "Logger" do
 	end
 
 	it "should have an alias for debug" do
-		expect(@logger).to receive(:log).with('debugging', App::LogLevel::DEBUG)
+		expect(@logger).to receive(:log).with('debugging', Rbdigital::LogLevel::DEBUG)
 		@logger.debug('debugging')
 	end
 
 	it "should have an alias for info" do
-		expect(@logger).to receive(:log).with('infos', App::LogLevel::INFO)
+		expect(@logger).to receive(:log).with('infos', Rbdigital::LogLevel::INFO)
 		@logger.info('infos')
 	end
 
 	it "should have an alias for error" do
-		expect(@logger).to receive(:log).with('errors', App::LogLevel::ERROR)
+		expect(@logger).to receive(:log).with('errors', Rbdigital::LogLevel::ERROR)
 		@logger.error('errors')
 	end
 

@@ -2,19 +2,16 @@ require 'nokogiri'
 require 'net/http'
 require 'base64'
 require 'json'
+require 'rbdigital/magazine'
 
-require_relative 'magazine'
-
-module App
-
+module Rbdigital
   class Library
+    attr_reader :start_page, :cookies, :id
 
     AJAX_URL = 'http://www.rbdigital.com/ajaxd.php?action='
     LOGIN_URL = AJAX_URL + 'p_login'
     CATALOGUE_URL = AJAX_URL + 'zinio_landing_magazine_collection'
     CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
-
-    attr_reader :start_page, :cookies, :id
 
     # init with the landing page url, and the library id
     def initialize(page, id)
@@ -88,7 +85,7 @@ module App
               mag = Magazine.new(anchor[:title], mag_id, $1)
               magazines << mag
             else
-              App::Logger.instance.error("img url format error #{img[:src]}")
+              Rbdigital::Logger.instance.error("img url format error #{img[:src]}")
             end
           end
         end
@@ -125,7 +122,7 @@ module App
 	      msg = json['title']
 			rescue Net::ReadTimeout
 				# TODO edit catalogue entry so picked up next time
-				App::Logger.instance.error("Net timeout on #{id}")
+				Rbdigital::Logger.instance.error("Net timeout on #{id}")
 			end
 
       "#{status}: #{msg}"
@@ -181,7 +178,5 @@ module App
         # TODO: need to check for new cookies?
         response.body
       end
-
   end
-
 end

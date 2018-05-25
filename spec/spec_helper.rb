@@ -2,11 +2,6 @@ require 'rspec'
 require 'coveralls'
 require 'simplecov'
 require 'webmock/rspec'
-require_relative 'helpers'
-
-RSpec.configure do |c|
-  c.include Helpers
-end
 
 SimpleCov.formatter = Coveralls::SimpleCov::Formatter
 SimpleCov.start do
@@ -15,10 +10,9 @@ end
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
-# TODO require "rbdigital"
-require_relative '../lib/app'
-require_relative '../lib/magazine'
-require_relative '../lib/library'
-require_relative '../lib/patron'
-require_relative '../lib/records'
-require_relative '../lib/utils'
+require 'rbdigital/application'
+require 'rbdigital/magazine'
+require 'rbdigital/library'
+require 'rbdigital/patron'
+require 'rbdigital/records'
+require 'rbdigital/utils'

@@ -1,9 +1,9 @@
 describe 'magazine' do
 
 	before(:all) do
-    @a = App::Magazine.new("Fab Feet", 1293, 416318957)
-		@b = App::Magazine.new("Splendid Shoes", "3573", "416318957")
-		@c = App::Magazine.new("Splendid Shoes", 3573, 112445549)
+    @a = Rbdigital::Magazine.new("Fab Feet", 1293, 416318957)
+		@b = Rbdigital::Magazine.new("Splendid Shoes", "3573", "416318957")
+		@c = Rbdigital::Magazine.new("Splendid Shoes", 3573, 112445549)
   end
 
 	it 'should be immutable' do

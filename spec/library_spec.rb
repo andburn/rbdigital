@@ -1,10 +1,14 @@
 describe 'Library' do
 
+  def get_data_file(file)
+	  File.new(File.join(File.dirname(__FILE__), 'data', file))
+	end
+
   before(:all) do
     @spec_dir = File.dirname(__FILE__)
     @id = "1234"
     @url = 'http://www.rbdigital.com/abc/service/zinio/landing'
-    @library = App::Library.new(@url, @id)
+    @library = Rbdigital::Library.new(@url, @id)
   end
 
   before(:each) do

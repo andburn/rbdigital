@@ -1,5 +1,4 @@
-require "rbdigital/version"
+module Rbdigital; end
 
-module Rbdigital
-  # API entry point
-end
+require "rbdigital/version"
+require "rbdigital/application"

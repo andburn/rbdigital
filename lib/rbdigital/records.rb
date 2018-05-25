@@ -1,14 +1,11 @@
 require 'singleton'
 require 'yaml'
-require_relative 'patron'
-require_relative 'magazine'
+require 'rbdigital/patron'
+require 'rbdigital/magazine'
 
-module App
-
+module Rbdigital
   class Records
-
     include Singleton
-
     attr_reader :config_file, :catalogue_file, :log_file
 
     def load(file)
@@ -110,7 +107,6 @@ module App
         return nil unless File.exist?(filename)
         File.open(filename, 'r').readlines
       end
-
+    # end private
   end
-
 end

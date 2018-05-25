@@ -1,6 +1,5 @@
-module App
+module Rbdigital
   class Patron
-
     attr_reader :name, :email, :password, :subs
 
     def initialize(name, email, password, subs=nil)
@@ -17,6 +16,5 @@ module App
     def to_s
       "#{name},#{email}"
     end
-
   end
 end
