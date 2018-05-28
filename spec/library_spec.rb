@@ -1,11 +1,6 @@
 describe 'Library' do
 
-  def get_data_file(file)
-	  File.new(File.join(File.dirname(__FILE__), 'data', file))
-	end
-
   before(:all) do
-    @spec_dir = File.dirname(__FILE__)
     @id = "1234"
     @url = 'http://www.rbdigital.com/abc/service/zinio/landing'
     @library = Rbdigital::Library.new(@url, @id)
@@ -112,31 +107,6 @@ describe 'Library' do
       catalogue = @library.build_catalogue()
       expect(stub).to have_been_requested
       expect(catalogue.length).to eq(0)
-    end
-
-  end
-
-  describe 'archived?' do
-
-    it 'should be true if only single issue' do
-      stub_request(:get, "http://www.rbdigital.com/abc/service/zinio/landing?mag_id=123").
-        with(:headers => {'Accept'=>'*/*', 'Cookie'=>'', 'User-Agent'=>'Ruby'}).
-        to_return(:body => get_data_file('one_issue_only.html'), :status => 200)
-      expect(@library.archived?(123)).to be_truthy
-    end
-
-    it 'should be true if only back issues are available' do
-      stub_request(:get, "http://www.rbdigital.com/abc/service/zinio/landing?mag_id=123").
-        with(:headers => {'Accept'=>'*/*', 'Cookie'=>'', 'User-Agent'=>'Ruby'}).
-        to_return(:body => get_data_file('back_issues_only.html'), :status => 200)
-      expect(@library.archived?(123)).to be_truthy
-    end
-
-    it 'should be false if current issue is available' do
-      stub_request(:get, "http://www.rbdigital.com/abc/service/zinio/landing?mag_id=123").
-        with(:headers => {'Accept'=>'*/*', 'Cookie'=>'', 'User-Agent'=>'Ruby'}).
-        to_return(:body => get_data_file('current_issue.html'), :status => 200)
-      expect(@library.archived?(123)).to be_falsey
     end
 
   end

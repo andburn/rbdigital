@@ -1,8 +1,6 @@
 require 'optparse'
 
 require 'rbdigital/library'
-require 'rbdigital/patron'
-require 'rbdigital/records'
 require 'rbdigital/utils'
 
 module Rbdigital
