@@ -1,7 +1,9 @@
 require 'nokogiri'
-require 'net/http'
 require 'base64'
 require 'json'
+require 'net/http'
+
+require 'rbdigital/request'
 
 module Rbdigital
   class Library
@@ -12,15 +14,25 @@ module Rbdigital
     CATALOGUE_URL = AJAX_URL + 'zinio_landing_magazine_collection'
     CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
 
+    # create the default library home page with the given library code
+    # can be overwritten by assigning new value to @start_page
+    def self.default_library_url(code)
+      "http://www.rbdigital.com/#{code}/service/magazines/landing"
+    end
+
     # init with the landing page url, and the library id
-    def initialize(page, id)
-      @start_page = page
+    def initialize(code, id)
+      @start_page = self.class.default_library_url(code)
       @id = id
       @cookies = ''
     end
 
+    def magazine_url(id)
+      "#{@start_page}?mag_id=#{id.to_s}"
+    end
+
     def log_in(patron)
-      post_request(LOGIN_URL, {
+      Request.post(LOGIN_URL, {
           :username => patron.email,
           :password => patron.password,
           :remember_me => 1,
@@ -34,7 +46,7 @@ module Rbdigital
     end
 
     def logged_in?
-      body = get_request(@start_page)
+      body = Request.get(@start_page)
       page = Nokogiri::HTML(body)
       welcome = page.at_css('div.navigation div.welcome')
       not welcome.nil?
@@ -61,7 +73,7 @@ module Rbdigital
     def build_catalogue_page(page, get_max_page=false)
       magazines = []
 
-      response = post_request(CATALOGUE_URL, {
+      response = Request.post(CATALOGUE_URL, {
           :genre_search_line => '',
           :language_search_line => '',
           :lib_id => @id,
@@ -110,7 +122,7 @@ module Rbdigital
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Post.new(uri.request_uri)
       request.set_form_data({:lib_id => @id, :mag_id => id})
-      request['Cookie'] = @cookies
+      request['Cookie'] = Request.cookies
 
 			status = msg = ''
 			begin
@@ -125,25 +137,6 @@ module Rbdigital
 			end
 
       "#{status}: #{msg}"
-    end
-
-    def archived?(id)
-      content = get_request(@start_page + "?mag_id=" + id.to_s)
-      html = Nokogiri::HTML(content)
-      # check for 'only back issues'
-      date = html.at_css('p.release_date')
-      back_only = date.children.at_css('span')
-      if !back_only.nil? && back_only.content =~ /only back issues.+available/i
-        return true
-      end
-      # check for 'one issue only'
-      info = html.at_css('div.addition_info')
-      issues = info.children.at_css('p:last-child')
-      if !issues.nil? && issues.content =~ /(one issue only)|(na)/i
-        return true
-      end
-      # otherwise its not archived
-      return false
     end
   end
 end

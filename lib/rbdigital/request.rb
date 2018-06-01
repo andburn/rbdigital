@@ -5,6 +5,10 @@ module Rbdigital
   class Request
     @@cookies = ''
 
+    def self.cookies
+      @@cookies
+    end
+
     def self.post(url, opts)
       uri = URI.parse(url)
       response = Net::HTTP.post_form(uri, opts)
