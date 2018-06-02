@@ -1,8 +1,8 @@
 describe 'magazine' do
 
 	before(:each) do
-    @mag_url = "http://www.rbdigital.com/abc/service/zinio/landing?mag_id=123"
-    @magazine = Rbdigital::Magazine.new(123)
+    @library = Rbdigital::Library.new('abc', 000)
+    @magazine = Rbdigital::Magazine.new(123, @library)
   end
 
 	describe 'get_info' do
@@ -30,12 +30,42 @@ describe 'magazine' do
       get_info_stub("current_issue")
       expect(@magazine.archived?).to be_falsey
     end
+
+    it 'should have a correct date object' do
+      get_info_stub("current_issue")
+      expect(@magazine.date).to eq(Date.new(2016, 5, 1))
+    end
+
+    it 'should have a correct date object with back isssue notice' do
+      get_info_stub("back_issues_only")
+      expect(@magazine.date).to eq(Date.new(2018, 1, 1))
+    end
+
+    it 'should have a title' do
+      get_info_stub("current_issue")
+      expect(@magazine.title).to eq("Android Magazine")
+    end
+
+    it 'should have a country' do
+      get_info_stub("current_issue")
+      expect(@magazine.country).to eq("United Kingdom")
+    end
+
+    it 'should have a genre' do
+      get_info_stub("current_issue")
+      expect(@magazine.genre).to eq("Computers & Technology")
+    end
+
+    it 'should have a language' do
+      get_info_stub("current_issue")
+      expect(@magazine.lang).to eq("English")
+    end
   end
 
   def get_info_stub(file)
-    stub_request(:get, @mag_url).
+    stub_request(:get, @library.magazine_url(123)).
         with(:headers => {'Accept'=>'*/*', 'Cookie'=>'', 'User-Agent'=>'Ruby'}).
         to_return(:body => get_data_file("#{file}.html"), :status => 200)
-      @magazine.get_info
+      @magazine.update
   end
 end
