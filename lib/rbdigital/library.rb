@@ -7,7 +7,8 @@ require 'rbdigital/request'
 
 module Rbdigital
   class Library
-    attr_reader :start_page, :cookies, :id
+    attr_reader :id, :code
+    attr_accessor :home_page
 
     AJAX_URL = 'http://www.rbdigital.com/ajaxd.php?action='
     LOGIN_URL = AJAX_URL + 'p_login'
@@ -15,20 +16,20 @@ module Rbdigital
     CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
 
     # create the default library home page with the given library code
-    # can be overwritten by assigning new value to @start_page
+    # can be overwritten by assigning new value to @home_page
     def self.default_library_url(code)
       "http://www.rbdigital.com/#{code}/service/magazines/landing"
     end
 
     # init with the landing page url, and the library id
     def initialize(code, id)
-      @start_page = self.class.default_library_url(code)
       @id = id
-      @cookies = ''
+      @code = code
+      @home_page = self.class.default_library_url(code)
     end
 
     def magazine_url(id)
-      "#{@start_page}?mag_id=#{id.to_s}"
+      "#{@home_page}?mag_id=#{id.to_s}"
     end
 
     def log_in(patron)
@@ -41,12 +42,11 @@ module Rbdigital
     end
 
     def log_out
-      # clear cookies
-      @cookies = ''
+      Request.clear_cookies
     end
 
     def logged_in?
-      body = Request.get(@start_page)
+      body = Request.get(@home_page)
       page = Nokogiri::HTML(body)
       welcome = page.at_css('div.navigation div.welcome')
       not welcome.nil?

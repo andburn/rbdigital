@@ -1,3 +1,5 @@
+require 'singleton'
+
 module Rbdigital
   class Logger
     include Singleton

@@ -9,6 +9,10 @@ module Rbdigital
       @@cookies
     end
 
+    def self.clear_cookies
+      @@cookies = ''
+    end
+
     def self.post(url, opts)
       uri = URI.parse(url)
       response = Net::HTTP.post_form(uri, opts)
