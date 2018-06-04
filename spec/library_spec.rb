@@ -5,11 +5,7 @@ describe 'Library' do
     @code = "abc"
     @url = Rbdigital::Library.default_library_url(@code)
     @library = Rbdigital::Library.new(@code, @id)
-  end
-
-  before(:each) do
-    @patron = instance_double("Patron",
-      :name => "Tim", :email => "tim@mail.com", :password => "abc123")
+    @user = { email: "tim@mail.com", password: "abc123" }
   end
 
   describe 'logged_in?' do
@@ -52,7 +48,7 @@ describe 'Library' do
             'User-Agent' => 'Ruby'
           }).to_return(:status => 200, :body => "", :headers => {})
 
-      @library.log_in(@patron)
+      @library.log_in(@user[:email], @user[:password])
       expect(stub).to have_been_requested
     end
 

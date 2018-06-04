@@ -4,6 +4,7 @@ require 'json'
 require 'net/http'
 
 require 'rbdigital/request'
+require 'rbdigital/magazine'
 
 module Rbdigital
   class Library
@@ -32,10 +33,10 @@ module Rbdigital
       "#{@home_page}?mag_id=#{id.to_s}"
     end
 
-    def log_in(patron)
+    def log_in(username, password)
       Request.post(LOGIN_URL, {
-          :username => patron.email,
-          :password => patron.password,
+          :username => username,
+          :password => password,
           :remember_me => 1,
           :lib_id => @id
       })

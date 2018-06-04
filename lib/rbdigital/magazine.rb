@@ -39,7 +39,7 @@ module Rbdigital
       @period = -1
       issues = info.children.at_css('p:last-child')
       if !issues.nil?
-        if issues.content =~ /one issue only/i
+        if issues.content =~ /(one issue only)|(n\/a)/i
           @period = 0
         elsif issues.content =~ /monthly/i
           @period = 4
