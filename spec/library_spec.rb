@@ -58,7 +58,7 @@ describe 'Library' do
 
   end
 
-  xdescribe 'build_catalogue' do
+  describe 'build_catalogue' do
 
     before(:each) do
       @stub = stub_request(:post,
@@ -87,12 +87,13 @@ describe 'Library' do
     end
 
     it 'should read a single page correctly' do
-      catalogue = @library.build_catalogue_page(1, true)
+      mags = []
+      more_pages = @library.build_catalogue_page(mags, 1)
       expect(@stub).to have_been_requested
-      expect(catalogue.pop).to eq(7)
+      expect(more_pages).to be_truthy
+      expect(mags.length).to eq(4)
     end
 
-    # TODO should handle proper multi page request
     it 'should create a list of all available magazines' do
       catalogue = @library.build_catalogue()
       expect(@stub).to have_been_requested.times(7)

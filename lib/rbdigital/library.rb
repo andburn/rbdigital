@@ -54,30 +54,21 @@ module Rbdigital
 
     def build_catalogue()
       magazines = []
-      # get first page and total pages
-      first_page = build_catalogue_page(1, true)
-      # pop off the total pages
-      total_pages = first_page.pop
-      # if an error occured return empty array
-      if total_pages.nil?
-        return []
-      end
-      magazines.concat(first_page)
-      # get rest of pages
-      (2..total_pages).each do |i|
-        magazines.concat(build_catalogue_page(i, false))
+      page = 0
+      # parse each page until the last page is reached
+      loop do
+        page += 1
+        break unless build_catalogue_page(magazines, page)
       end
       magazines
     end
 
-    def build_catalogue_page(page, get_max_page=false)
-      magazines = []
-
+    def build_catalogue_page(magazines, page)
       response = Request.post(CATALOGUE_URL, {
           :genre_search_line => '',
           :language_search_line => '',
           :lib_id => @id,
-          :p_num => page,
+          :p_num => page.to_s,
           :strQueryLine => '//',
           :title_search_line => ''
       })
@@ -90,30 +81,24 @@ module Rbdigital
         mags.each do |m|
           anchor = m.children.at_css('a')
           if anchor[:href] =~ /mag_id=(\d+)$/
-            img = anchor.children.at_css('img')
-            mag_id = $1
-            if img[:src] =~ %r!imgs.zinio.com/\w+/\d+/\d+/(\d+)/\w+.jpg!
-              mag = Magazine.new(anchor[:title], mag_id, $1)
-              magazines << mag
-            else
-              Rbdigital::Logger.instance.error("img url format error #{img[:src]}")
-            end
+            magazines << Magazine.new($1, self)
           end
         end
-        # get the total number of available pages
-        if get_max_page
-          links = page_html.at_css('div.links').children.css('a')
-          links.each do |l|
-            if l[:title] == 'The last page'
-              if l[:onclick] =~ /OnMagazineCollectionSearch\(\s*'(\d+)'\)/i
-                magazines << $1.to_i
+        # get the last page number
+        links = page_html.at_css('div.links').children.css('a')
+        links.each do |l|
+          if l[:title] == 'The last page'
+            if l[:onclick] =~ /OnMagazineCollectionSearch\(\s*'(\d+)'\)/i
+              if page < $1.to_i
+                return true
               end
             end
           end
         end
       end
-
-      magazines
+      # should only return here if on last page
+      # TODO or some failure parsing the links section
+      false
     end
 
     def checkout(id)
