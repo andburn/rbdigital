@@ -1,9 +1,0 @@
-settings:
-  color: green
-patrons:
-  John:
-    email: john@email.com
-    password: Abc123
-  Bill:
-    email: bill@email.com
-    password: Xzy00

@@ -146,7 +146,7 @@ describe 'Library' do
         ).
         to_return(
           :status => 200,
-          :body => get_data_file('catalogue_small_new.html'),
+          :body => get_data_file('catalogue_small.html'),
           :headers => {}
         )
     end

@@ -155,8 +155,7 @@ module Rbdigital
 	      status = json['status']
 	      msg = json['title']
 			rescue Net::ReadTimeout
-				# TODO edit catalogue entry so picked up next time
-				Rbdigital::Logger.instance.error("Net timeout on #{id}")
+				# TODO return an error
 			end
 
       "#{status}: #{msg}"
