@@ -161,6 +161,28 @@ module Rbdigital
       "#{status}: #{msg}"
     end
 
+    def checkout_magazines(user_name, user_pass, *magazine_ids)
+      if not magazine_ids.empty?
+        library.log_out
+        library.log_in(user_name, user_pass)
+        if not library.logged_in?
+          # TODO throw error
+        end
+        magazine_ids.each do |id|
+          # need to wait on timed lock out to end
+          # TODO shouldn't wait at start
+          sleep(30)
+          # checkout the latest issue
+          status = library.checkout(id)
+          if status =~ /^ERR/i
+            # TODO throw error
+          elsif status =~ /already/i
+            # TODO throw error (doesn't seem to happen anymore)
+          end
+        end
+      end
+  end
+
     private
 
       def additional_info(node, child, text)
