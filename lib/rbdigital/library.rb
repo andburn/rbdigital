@@ -29,6 +29,7 @@ module Rbdigital
       @home_page = self.class.default_library_url(code)
     end
 
+    # convenience function to get a magazine's url
     def magazine_url(id)
       "#{@home_page}?mag_id=#{id.to_s}"
     end
