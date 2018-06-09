@@ -16,6 +16,7 @@ end
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
+require 'rbdigital'
 require 'rbdigital/magazine'
 require 'rbdigital/request'
 require 'rbdigital/library'

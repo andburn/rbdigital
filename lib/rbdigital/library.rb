@@ -55,6 +55,7 @@ module Rbdigital
     end
 
     def magazine_info(id)
+      Rbdigital.logger.info "Getting info for mag #{id}"
       mag = Magazine.new(id)
       content = Request.get(self.magazine_url(id))
       html = Nokogiri::HTML(content)
@@ -84,6 +85,8 @@ module Rbdigital
           period = 4
         elsif issues.content =~ /weekly/i
           period = 1
+        else
+          Rbdigital.logger.warn "Magazine period unknown '#{issues.content}'"
         end
       end
       mag.period = period
@@ -91,18 +94,21 @@ module Rbdigital
       mag
     end
 
-    def build_catalogue()
+    def build_catalogue
       magazines = []
       page = 0
       # parse each page until the last page is reached
       loop do
         page += 1
         break unless build_catalogue_page(magazines, page)
+        # in case of error stop after 100 pages
+        break if page > 100
       end
       magazines
     end
 
     def build_catalogue_page(magazines, page)
+      Rbdigital.logger.info "Requesting catalogue page #{page}"
       response = Request.post(CATALOGUE_URL, {
           :genre_search_line => '',
           :language_search_line => '',
@@ -112,6 +118,7 @@ module Rbdigital
           :title_search_line => ''
       })
 
+      Rbdigital.logger.info "Parsing catalogue page #{page}"
       json = JSON.parse(response)
       if json.key?('status') && json['status'] == 'OK'
         content = Base64.decode64(json['content'])
@@ -135,12 +142,12 @@ module Rbdigital
           end
         end
       end
-      # should only return here if on last page
-      # TODO or some failure parsing the links section
+      Rbdigital.logger.info "This is the last page (#{page})"
       false
     end
 
     def checkout(id)
+      Rbdigital.logger.info "Checking out mag id=#{id}"
       uri = URI.parse(CHECKOUT_URL)
 
       http = Net::HTTP.new(uri.host, uri.port)
@@ -155,8 +162,8 @@ module Rbdigital
 	      json = JSON.parse(response.body)
 	      status = json['status']
 	      msg = json['title']
-			rescue Net::ReadTimeout
-				# TODO return an error
+			rescue Net::ReadTimeout => e
+				Rbdigital.logger.error "Checkout timed out (#{e.message})"
 			end
 
       "#{status}: #{msg}"
@@ -167,7 +174,8 @@ module Rbdigital
         library.log_out
         library.log_in(user_name, user_pass)
         if not library.logged_in?
-          # TODO throw error
+          Rbdigital.logger.error "not logged in (#{user_name})"
+          raise LibraryError.new("Login failed for #{user_name}")
         end
         magazine_ids.each do |id|
           # need to wait on timed lock out to end
@@ -176,9 +184,11 @@ module Rbdigital
           # checkout the latest issue
           status = library.checkout(id)
           if status =~ /^ERR/i
-            # TODO throw error
+            Rbdigital.logger.error "Checkout status 'error' (#{id} : #{user_name}"
+            raise LibraryError.new("Checkout failed: #{id} (#{user_name})")
           elsif status =~ /already/i
-            # TODO throw error (doesn't seem to happen anymore)
+            Rbdigital.logger.error "Checkout status 'already' (#{id} : #{user_name}"
+            raise LibraryError.new("Already checked out error: #{id} (#{user_name})")
           end
         end
       end
@@ -190,5 +200,11 @@ module Rbdigital
         node.children.at_css("p:nth-child(#{child})")
           .content.sub("#{text}:", "").strip
       end
+  end
+
+  class LibraryError < StandardError
+    def initialize(message)
+      super(message)
+    end
   end
 end
