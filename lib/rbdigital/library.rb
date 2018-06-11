@@ -60,6 +60,11 @@ module Rbdigital
       content = Request.get(self.magazine_url(id))
       html = Nokogiri::HTML(content)
 
+      if html.at_css('h3.magazine_name').nil?
+        Rbdigital.logger.error "Magazine #{id} not found or parse error"
+        raise LibraryError.new("Magazine #{id} not found")
+      end
+
       mag.title = html.at_css('h3.magazine_name').content.strip
       date_node = html.at_css('p.release_date')
       mag.date = Date.parse(date_node.content)
@@ -171,9 +176,9 @@ module Rbdigital
 
     def checkout_magazines(user_name, user_pass, *magazine_ids)
       if not magazine_ids.empty?
-        library.log_out
-        library.log_in(user_name, user_pass)
-        if not library.logged_in?
+        log_out
+        log_in(user_name, user_pass)
+        if not logged_in?
           Rbdigital.logger.error "not logged in (#{user_name})"
           raise LibraryError.new("Login failed for #{user_name}")
         end
@@ -182,7 +187,7 @@ module Rbdigital
           # TODO shouldn't wait at start
           sleep(30)
           # checkout the latest issue
-          status = library.checkout(id)
+          status = checkout(id)
           if status =~ /^ERR/i
             Rbdigital.logger.error "Checkout status 'error' (#{id} : #{user_name}"
             raise LibraryError.new("Checkout failed: #{id} (#{user_name})")
