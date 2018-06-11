@@ -15,6 +15,7 @@ module Rbdigital
     LOGIN_URL = AJAX_URL + 'p_login'
     CATALOGUE_URL = AJAX_URL + 'zinio_landing_magazine_collection'
     CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
+    CHECKOUT_WAIT = 30
 
     # create the default library home page with the given library code
     # can be overwritten by assigning new value to @home_page
@@ -171,7 +172,9 @@ module Rbdigital
 				Rbdigital.logger.error "Checkout timed out (#{e.message})"
 			end
 
-      "#{status}: #{msg}"
+      message = "#{status}: #{msg}"
+      Rbdigital.logger.info "Magazine #{id} checkout out (#{message})"
+      message
     end
 
     def checkout_magazines(user_name, user_pass, *magazine_ids)
@@ -183,9 +186,6 @@ module Rbdigital
           raise LibraryError.new("Login failed for #{user_name}")
         end
         magazine_ids.each do |id|
-          # need to wait on timed lock out to end
-          # TODO shouldn't wait at start
-          sleep(30)
           # checkout the latest issue
           status = checkout(id)
           if status =~ /^ERR/i
@@ -195,6 +195,9 @@ module Rbdigital
             Rbdigital.logger.error "Checkout status 'already' (#{id} : #{user_name}"
             raise LibraryError.new("Already checked out error: #{id} (#{user_name})")
           end
+          # need to wait after each checkout, throttling being applied
+          Rbdigital.logger.info "Waiting #{CHECKOUT_WAIT}s before next checkout"
+          sleep(CHECKOUT_WAIT)
         end
       end
   end
