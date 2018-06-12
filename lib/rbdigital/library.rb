@@ -1,7 +1,8 @@
-require 'nokogiri'
 require 'base64'
 require 'json'
+require 'date'
 require 'net/http'
+require 'nokogiri'
 
 require 'rbdigital/request'
 require 'rbdigital/magazine'
