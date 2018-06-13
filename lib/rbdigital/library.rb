@@ -86,14 +86,18 @@ module Rbdigital
       period = -1
       issues = info.children.at_css('p:last-child')
       if !issues.nil?
-        if issues.content =~ /(one issue only)|(n\/a)/i
+        if issues.content =~ /(one issue only)|(n\/?a)/i
           period = 0
+        elsif issues.content =~ /quarterly/i
+          period = 12
         elsif issues.content =~ /monthly/i
           period = 4
+        elsif issues.content =~ /bimonthly/i
+          period = 2
         elsif issues.content =~ /weekly/i
           period = 1
         else
-          Rbdigital.logger.warn "Magazine period unknown '#{issues.content}'"
+          Rbdigital.logger.warn "Magazine period unknown '#{issues.content.strip}'"
         end
       end
       mag.period = period
