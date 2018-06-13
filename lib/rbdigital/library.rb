@@ -138,7 +138,7 @@ module Rbdigital
         mags.each do |m|
           anchor = m.children.at_css('a')
           if anchor[:href] =~ /mag_id=(\d+)$/
-            magazines << $1
+            magazines << { id: $1, title: anchor[:title] }
           end
         end
         # get the last page number
