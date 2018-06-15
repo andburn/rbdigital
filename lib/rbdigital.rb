@@ -18,7 +18,7 @@ module Rbdigital
     @@logger
   end
 
-  def self.log_to_file(log_file, level=Log4r::ERROR)
+  def self.log_to_file(log_file, level=Log4r::INFO)
     # add a file outputter to logger if arg is ok
     if not log_file.nil? && File.file?(log_file)
       file_output = Log4r::FileOutputter.new("logfile",
