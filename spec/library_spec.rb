@@ -69,57 +69,57 @@ describe 'Library' do
 
     it 'period should be zero if a single issue' do
       @magazine = get_info_stub("one_issue_only")
-      expect(@magazine.period).to eq 0
+      expect(@magazine[:period]).to eq 0
     end
 
     it 'period should be four if monthly' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.period).to eq 4
+      expect(@magazine[:period]).to eq 4
     end
 
     it 'period should be one if weekly' do
       @magazine = get_info_stub("weekly_issue")
-      expect(@magazine.period).to eq 1
+      expect(@magazine[:period]).to eq 1
     end
 
     it 'should be true if only back issues are available' do
       @magazine = get_info_stub("back_issues_only")
-      expect(@magazine.archived?).to be_truthy
+      expect(@magazine[:archived]).to be_truthy
     end
 
     it 'should be false if current issue is available' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.archived?).to be_falsey
+      expect(@magazine[:archived]).to be_falsey
     end
 
     it 'should have a correct date object' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.date).to eq(Date.new(2016, 5, 1))
+      expect(@magazine[:date]).to eq(Date.new(2016, 5, 1))
     end
 
     it 'should have a correct date object with back isssue notice' do
       @magazine = get_info_stub("back_issues_only")
-      expect(@magazine.date).to eq(Date.new(2018, 1, 1))
+      expect(@magazine[:date]).to eq(Date.new(2018, 1, 1))
     end
 
     it 'should have a title' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.title).to eq("Android Magazine")
+      expect(@magazine[:title]).to eq("Android Magazine")
     end
 
     it 'should have a country' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.country).to eq("United Kingdom")
+      expect(@magazine[:country]).to eq("United Kingdom")
     end
 
     it 'should have a genre' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.genre).to eq("Computers & Technology")
+      expect(@magazine[:genre]).to eq("Computers & Technology")
     end
 
     it 'should have a language' do
       @magazine = get_info_stub("current_issue")
-      expect(@magazine.lang).to eq("English")
+      expect(@magazine[:lang]).to eq("English")
     end
   end
 

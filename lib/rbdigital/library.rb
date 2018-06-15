@@ -5,7 +5,6 @@ require 'net/http'
 require 'nokogiri'
 
 require 'rbdigital/request'
-require 'rbdigital/magazine'
 
 module Rbdigital
   class Library
@@ -58,7 +57,7 @@ module Rbdigital
 
     def magazine_info(id)
       Rbdigital.logger.info "Getting info for mag #{id}"
-      mag = Magazine.new(id)
+      mag = { id: id }
       content = Request.get(self.magazine_url(id))
       html = Nokogiri::HTML(content)
 
@@ -67,20 +66,20 @@ module Rbdigital
         raise LibraryError.new("Magazine #{id} not found")
       end
 
-      mag.title = html.at_css('h3.magazine_name').content.strip
+      mag[:title] = html.at_css('h3.magazine_name').content.strip
       date_node = html.at_css('p.release_date')
-      mag.date = Date.parse(date_node.content)
+      mag[:date] = Date.parse(date_node.content)
       # check if archived, i.e. only back issues are available
       back_only = date_node.children.at_css('span')
       if !back_only.nil? && back_only.content =~ /current subscription.+unavailable/i
-        mag.archived = true
+        mag[:archived] = true
       end
 
       # parse the additional info section
       info = html.at_css('div.addition_info')
-      mag.genre = additional_info(info, 1, "genre")
-      mag.country = additional_info(info, 2, "country")
-      mag.lang = additional_info(info, 3, "language")
+      mag[:genre] = additional_info(info, 1, "genre")
+      mag[:country] = additional_info(info, 2, "country")
+      mag[:lang] = additional_info(info, 3, "language")
 
       # get the period of issue, i.e. how many weeks between issues
       period = -1
@@ -100,7 +99,7 @@ module Rbdigital
           Rbdigital.logger.warn "Magazine period unknown '#{issues.content.strip}'"
         end
       end
-      mag.period = period
+      mag[:period] = period
 
       mag
     end
