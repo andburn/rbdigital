@@ -20,7 +20,7 @@ module Rbdigital
 
   def self.log_to_file(log_file, level=Log4r::INFO)
     # add a file outputter to logger if arg is ok
-    if not log_file.nil? && File.file?(log_file)
+    if not log_file.nil? && Dir.exist?(File.dirname(log_file))
       file_output = Log4r::FileOutputter.new("logfile",
         :filename => log_file,
         :trunc => false,
