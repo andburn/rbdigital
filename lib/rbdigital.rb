@@ -2,6 +2,7 @@ require "log4r"
 
 require "rbdigital/version"
 require "rbdigital/library"
+require "rbdigital/errors"
 
 module Rbdigital
   # set global logger base level

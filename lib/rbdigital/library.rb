@@ -5,6 +5,7 @@ require 'net/http'
 require 'nokogiri'
 
 require 'rbdigital/request'
+require 'rbdigital/errors'
 
 module Rbdigital
   class Library
@@ -63,7 +64,7 @@ module Rbdigital
 
       if html.at_css('h3.magazine_name').nil?
         Rbdigital.logger.error "Magazine #{id} not found or parse error"
-        raise LibraryError.new("Magazine #{id} not found")
+        raise MagazineNotFoundError.new("Magazine #{id} not found")
       end
 
       mag[:title] = html.at_css('h3.magazine_name').content.strip
@@ -187,14 +188,14 @@ module Rbdigital
         log_in(user_name, user_pass)
         if not logged_in?
           Rbdigital.logger.error "not logged in (#{user_name})"
-          raise LibraryError.new("Login failed for #{user_name}")
+          raise LoginError.new("Login failed for #{user_name}")
         end
         magazine_ids.each do |id|
           # checkout the latest issue
           status = checkout(id)
           if status =~ /^ERR/i
             Rbdigital.logger.error "Checkout status 'error' (#{id} : #{user_name}"
-            raise LibraryError.new("Checkout failed: #{id} (#{user_name})")
+            raise CheckoutError.new("Checkout failed: #{id} (#{user_name})")
           elsif status =~ /already/i
             Rbdigital.logger.error "Checkout status 'already' (#{id} : #{user_name}"
             raise LibraryError.new("Already checked out error: #{id} (#{user_name})")
@@ -212,11 +213,5 @@ module Rbdigital
         node.children.at_css("p:nth-child(#{child})")
           .content.sub("#{text}:", "").strip
       end
-  end
-
-  class LibraryError < StandardError
-    def initialize(message)
-      super(message)
-    end
   end
 end
