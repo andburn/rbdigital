@@ -91,6 +91,8 @@ module Rbdigital
       if !issues.nil?
         if issues.content =~ /(one issue only)|(n\/?a)/i
           period = 0
+        elsif issues.content =~ /biannually/i
+          period = 26
         elsif issues.content =~ /quarterly/i
           period = 12
         elsif issues.content =~ /monthly/i
@@ -100,7 +102,9 @@ module Rbdigital
         elsif issues.content =~ /weekly/i
           period = 1
         else
-          Rbdigital.logger.warn "Magazine period unknown '#{issues.content.strip}'"
+          msg = "Magazine period unknown '#{issues.content.strip}'"
+          Rbdigital.logger.error msg
+          raise LibraryError.new(msg)
         end
       end
       mag[:period] = period
