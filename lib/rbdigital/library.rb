@@ -37,6 +37,7 @@ module Rbdigital
     end
 
     def log_in(username, password)
+      Rbdigital.logger.info "Sending login request for #{username}"
       Request.post(LOGIN_URL, {
           :username => username,
           :password => password,
@@ -46,10 +47,12 @@ module Rbdigital
     end
 
     def log_out
+      Rbdigital.logger.info "Logging out clearing cookies"
       Request.clear_cookies
     end
 
     def logged_in?
+      Rbdigital.logger.info "Requesting home page to check log in status"
       body = Request.get(@home_page)
       page = Nokogiri::HTML(body)
       welcome = page.at_css('div.navigation div.welcome')

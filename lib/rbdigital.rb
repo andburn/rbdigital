@@ -31,7 +31,13 @@ module Rbdigital
     @@logger
   end
 
-  def self.log_to_file(log_file, level=Log4r::INFO)
+  def self.set_log_level(level)
+    self.logger.level = level
+    Log4r::Logger.root.level = level
+    Log4r::Outputter.each {|k,v| v.level = level}
+  end
+
+  def self.add_file_logger(log_file, level=Log4r::INFO)
     name = "logfile"
     if Log4r::Outputter[name].nil?
       # add a file outputter to logger if arg is ok
@@ -39,7 +45,8 @@ module Rbdigital
         file_output = Log4r::FileOutputter.new(name,
           :filename => log_file,
           :trunc => false,
-          :level => level)
+          :level => level,
+          :formatter => Log4r::PatternFormatter.new(pattern: "%d %l: %m"))
         self.logger.add(file_output)
       end
     else
