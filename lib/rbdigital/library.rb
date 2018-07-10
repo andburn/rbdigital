@@ -181,15 +181,24 @@ module Rbdigital
 	      status = json['status']
 	      msg = json['title']
 			rescue Net::ReadTimeout => e
-				Rbdigital.logger.error "Checkout timed out (#{e.message})"
+        Rbdigital.logger.error "Checkout timed out (#{e.message})"
+        return false
 			end
 
-      message = "#{status}: #{msg}"
-      Rbdigital.logger.info "Magazine #{id} checkout out (#{message})"
-      message
+      if status =~ /^err/i
+        Rbdigital.logger.error "Checkout status 'error' #{id}"
+        return false
+      elsif msg =~ /already/i
+        Rbdigital.logger.error "Checkout status 'already' #{id}"
+        return false
+      else
+        Rbdigital.logger.info "Magazine #{id} checkout out (#{status}: #{msg})"
+        return true
+      end
     end
 
     def checkout_magazines(user_name, user_pass, *magazine_ids)
+      failed = []
       if not magazine_ids.empty?
         log_out
         log_in(user_name, user_pass)
@@ -197,21 +206,17 @@ module Rbdigital
           Rbdigital.logger.error "not logged in (#{user_name})"
           raise LoginError.new("Login failed for #{user_name}")
         end
+        # checkout each mag by id for logged in user
         magazine_ids.each do |id|
           # checkout the latest issue
-          status = checkout(id)
-          if status =~ /^ERR/i
-            Rbdigital.logger.error "Checkout status 'error' (#{id} : #{user_name}"
-            raise CheckoutError.new("Checkout failed: #{id} (#{user_name})")
-          elsif status =~ /already/i
-            Rbdigital.logger.error "Checkout status 'already' (#{id} : #{user_name}"
-            raise LibraryError.new("Already checked out error: #{id} (#{user_name})")
-          end
+          success = checkout(id)
+          failed << id unless success
           # need to wait after each checkout, throttling being applied
-          Rbdigital.logger.info "Waiting #{CHECKOUT_WAIT}s before next checkout"
+          Rbdigital.logger.debug "Waiting #{CHECKOUT_WAIT}s before next checkout"
           sleep(CHECKOUT_WAIT)
         end
       end
+      failed
   end
 
     private

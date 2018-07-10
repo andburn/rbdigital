@@ -190,7 +190,7 @@ describe 'Library' do
       }
     end
 
-    it 'should return success message when checkout is successfull' do
+    it 'should return true when checkout is successfull' do
       stub = stub_request(:post,
         "http://www.rbdigital.com/ajaxd.php?action=zinio_checkout_complete").
         with(:body => @body, :headers => @headers).
@@ -200,11 +200,11 @@ describe 'Library' do
           :headers => {}
         )
 
-      expect(@library.checkout(22)).to eq("OK: Success!")
+      expect(@library.checkout(22)).to be_truthy
       expect(stub).to have_been_requested
     end
 
-    it 'should return warning when already checkout' do
+    it 'should return false when already checkout' do
       stub = stub_request(:post,
         "http://www.rbdigital.com/ajaxd.php?action=zinio_checkout_complete").
         with(:body => @body, :headers => @headers).
@@ -214,7 +214,21 @@ describe 'Library' do
           :headers => {}
         )
 
-      expect(@library.checkout(22)).to eq("Info: You already checked out this issue")
+      expect(@library.checkout(22)).to be_falsey
+      expect(stub).to have_been_requested
+    end
+
+    it 'should return false on checkout error' do
+      stub = stub_request(:post,
+        "http://www.rbdigital.com/ajaxd.php?action=zinio_checkout_complete").
+        with(:body => @body, :headers => @headers).
+        to_return(
+          :status => 200,
+          :body => '{"status": "ERR", "title": "Something went wrong"}',
+          :headers => {}
+        )
+
+      expect(@library.checkout(22)).to be_falsey
       expect(stub).to have_been_requested
     end
 
