@@ -234,4 +234,37 @@ describe 'Library' do
 
   end
 
+  describe 'build_collection' do
+    before(:each) do
+      @stub = stub_request(:post,
+        "http://www.rbdigital.com/ajaxd.php?action=zinio_user_issue_collection").
+        with(
+          :body => {
+            "content_filter" => '',
+            "lib_id" => @id,
+            "p_num" => /\d+/,
+            "service_t" => 'magazines'
+          },
+          :headers => {
+            'Accept'=>'*/*',
+            'Content-Type'=>'application/x-www-form-urlencoded',
+            'Host'=>'www.rbdigital.com',
+            'User-Agent'=>'Ruby'
+          }
+        ).
+        to_return(
+          :status => 200,
+          :body => get_data_file('collection_small.html'),
+          :headers => {}
+        )
+    end
+
+    it 'should read a single page correctly' do
+      issues = []
+      more_pages = @library.build_collection_page(issues, 1)
+      expect(@stub).to have_been_requested
+      expect(more_pages).to be_truthy
+      expect(issues.length).to eq(5)
+    end
+  end
 end

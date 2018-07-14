@@ -16,6 +16,7 @@ module Rbdigital
     LOGIN_URL = AJAX_URL + 'p_login'
     CATALOGUE_URL = AJAX_URL + 'zinio_landing_magazine_collection'
     CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
+    COLLECTION_URL = AJAX_URL + 'zinio_user_issue_collection'
     CHECKOUT_WAIT = 30
 
     # create the default library home page with the given library code
@@ -162,6 +163,16 @@ module Rbdigital
       end
       Rbdigital.logger.info "This is the last page (#{page})"
       false
+    end
+
+    def build_collection_page(issues, page)
+      response = Request.post(COLLECTION_URL, {
+          :content_filter => '',
+          :lib_id => @id,
+          :p_num => page.to_s,
+          :service_t => 'magazines'
+      })
+      (1..5).each {|x| issues << x}
     end
 
     def checkout(id)
