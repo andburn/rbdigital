@@ -19,3 +19,8 @@ WebMock.disable_net_connect!(allow_localhost: true)
 require 'rbdigital'
 require 'rbdigital/request'
 require 'rbdigital/library'
+
+# don't show error log messages on test run
+require 'log4r'
+
+Rbdigital.set_log_level(Log4r::FATAL)
