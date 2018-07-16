@@ -172,7 +172,39 @@ module Rbdigital
           :p_num => page.to_s,
           :service_t => 'magazines'
       })
-      (1..5).each {|x| issues << x}
+
+      Rbdigital.logger.info "Parsing collection page #{page}"
+      json = JSON.parse(response)
+      if json.key?('status') && json['status'] == 'OK'
+        content = Base64.decode64(json['content'])
+        page_html = Nokogiri::HTML(content)
+        mags = page_html.css('tr.magazine > td.title')
+        mags.each do |m|
+          anchor = m.children.css('a').first
+          iss = {}
+          if anchor[:href] =~ /magazine-reader\/(\d+)\?zenith_mode$/
+            iss[:id] = $1
+          end
+          if anchor[:title] =~ /^Read\s+(\w+\s+\d+\s*,\s+\d+)\s+issue\s+of\s+(.+)$/
+            iss[:date] = $1
+            iss[:title] = $2
+          end
+          issues << iss
+        end
+        # get the last page number
+        links = page_html.at_css('div.links').children.css('a')
+        links.each do |l|
+          if l[:title] == 'The last page'
+            if l[:onclick] =~ /OnUserIssueCollectionPage\(\s*'(\d+)'\)/i
+              if page < $1.to_i
+                return true
+              end
+            end
+          end
+        end
+      end
+      #Rbdigital.logger.info "This is the last page (#{page})"
+      false
     end
 
     def checkout(id)

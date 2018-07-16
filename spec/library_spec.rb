@@ -262,9 +262,15 @@ describe 'Library' do
     it 'should read a single page correctly' do
       issues = []
       more_pages = @library.build_collection_page(issues, 1)
+      first = issues.first
+
       expect(@stub).to have_been_requested
       expect(more_pages).to be_truthy
       expect(issues.length).to eq(5)
+      expect(first[:id]).to eq("415875")
+      expect(first[:title]).to eq("Radio Times")
+      expect(first[:date]).to eq("October 26, 2018")
+      expect(issues.last[:id]).to eq("402538")
     end
   end
 end
