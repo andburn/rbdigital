@@ -272,5 +272,11 @@ describe 'Library' do
       expect(first[:date]).to eq("October 26, 2018")
       expect(issues.last[:id]).to eq("402538")
     end
+
+    it 'should create a list of all issues in collection' do
+      issues = @library.build_collection()
+      expect(@stub).to have_been_requested.times(8)
+      expect(issues.length).to eq(40)
+    end
   end
 end

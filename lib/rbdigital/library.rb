@@ -165,6 +165,19 @@ module Rbdigital
       false
     end
 
+    def build_collection
+      issues = []
+      page = 0
+      # parse each page until the last page is reached
+      loop do
+        page += 1
+        break unless build_collection_page(issues, page)
+        # in case of error stop after 500 pages
+        break if page > 500
+      end
+      issues
+    end
+
     def build_collection_page(issues, page)
       response = Request.post(COLLECTION_URL, {
           :content_filter => '',
