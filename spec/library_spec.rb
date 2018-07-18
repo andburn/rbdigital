@@ -247,8 +247,9 @@ describe 'Library' do
           },
           :headers => {
             'Accept'=>'*/*',
+            'Cookie'=>'',
             'Content-Type'=>'application/x-www-form-urlencoded',
-            'Host'=>'www.rbdigital.com',
+            'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
             'User-Agent'=>'Ruby'
           }
         ).
@@ -274,9 +275,71 @@ describe 'Library' do
     end
 
     it 'should create a list of all issues in collection' do
-      issues = @library.build_collection()
+      login_stub = stub_request(:post,
+        "http://www.rbdigital.com/ajaxd.php?action=p_login")
+        .with(
+          body: {
+            "lib_id"=>@id,
+            "password"=>"pass",
+            "remember_me"=>"1",
+            "username"=>"user"
+          },
+          headers: {
+            'Accept'=>'*/*',
+            'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+            'Content-Type'=>'application/x-www-form-urlencoded',
+            'Host'=>'www.rbdigital.com',
+            'User-Agent'=>'Ruby'
+          }
+        ).to_return(status: 200, body: "", headers: {})
+      login_check_stub = stub_request(:get, @url).
+        to_return(:body => get_data_file('logged_in.html'), :status => 200)
+
+      issues = @library.build_collection('user', 'pass')
+      expect(login_stub).to have_been_requested.times(1)
+      expect(login_check_stub).to have_been_requested.times(1)
       expect(@stub).to have_been_requested.times(8)
       expect(issues.length).to eq(40)
+    end
+  end
+
+  describe 'remove_issue' do
+    before(:all) do
+      @body = {"lib_id"=>@id, "issue_id" => '2222', "service_t" => 'magazines'}
+      @headers = {
+        'Accept'=>'*/*',
+        'Content-Type'=>'application/x-www-form-urlencoded',
+        'User-Agent'=>'Ruby',
+        'Cookie'=>''
+      }
+    end
+
+    it 'should return true when removal is successfull' do
+      stub = stub_request(:post,
+        "http://www.rbdigital.com/ajaxd.php?action=zinio_user_issue_collection_remove").
+        with(:body => @body, :headers => @headers).
+        to_return(
+          :status => 200,
+          :body => '{"status": "OK", "title": "Success!"}',
+          :headers => {}
+        )
+
+      expect(@library.remove_issue(2222)).to be_truthy
+      expect(stub).to have_been_requested
+    end
+
+    it 'should return false when removal is unsuccessfull' do
+      stub = stub_request(:post,
+        "http://www.rbdigital.com/ajaxd.php?action=zinio_user_issue_collection_remove").
+        with(:body => @body, :headers => @headers).
+        to_return(
+          :status => 200,
+          :body => '{"status": "ERR", "title": "ERROR"}',
+          :headers => {}
+        )
+
+      expect(@library.remove_issue(2222)).to be_falsey
+      expect(stub).to have_been_requested
     end
   end
 end

@@ -17,6 +17,7 @@ module Rbdigital
     CATALOGUE_URL = AJAX_URL + 'zinio_landing_magazine_collection'
     CHECKOUT_URL = AJAX_URL + 'zinio_checkout_complete'
     COLLECTION_URL = AJAX_URL + 'zinio_user_issue_collection'
+    REMOVE_URL = AJAX_URL + 'zinio_user_issue_collection_remove'
     CHECKOUT_WAIT = 30
 
     # create the default library home page with the given library code
@@ -165,29 +166,43 @@ module Rbdigital
       false
     end
 
-    def build_collection
+    def build_collection(user_name, user_pass)
       issues = []
       page = 0
+
+      log_out
+      log_in(user_name, user_pass)
+      if not logged_in?
+        Rbdigital.logger.error "not logged in (#{user_name})"
+        raise LoginError.new("Login failed for #{user_name}")
+      end
+
       # parse each page until the last page is reached
       loop do
         page += 1
         break unless build_collection_page(issues, page)
-        # in case of error stop after 500 pages
-        break if page > 500
+        # in case of error stop after 200 pages
+        break if page > 200
       end
       issues
     end
 
+    # NOTE collection page should be in row form, not grid (set in preferences)
     def build_collection_page(issues, page)
-      response = Request.post(COLLECTION_URL, {
-          :content_filter => '',
-          :lib_id => @id,
-          :p_num => page.to_s,
-          :service_t => 'magazines'
+      uri = URI.parse(COLLECTION_URL)
+      http = Net::HTTP.new(uri.host, uri.port)
+      request = Net::HTTP::Post.new(uri.request_uri)
+      request.set_form_data({
+        :lib_id => @id,
+        :content_filter => '',
+        :p_num => page.to_s,
+        :service_t => 'magazines'
       })
+      request['Cookie'] = Request.cookies
+      response = http.request(request)
 
       Rbdigital.logger.info "Parsing collection page #{page}"
-      json = JSON.parse(response)
+      json = JSON.parse(response.body)
       if json.key?('status') && json['status'] == 'OK'
         content = Base64.decode64(json['content'])
         page_html = Nokogiri::HTML(content)
@@ -216,7 +231,7 @@ module Rbdigital
           end
         end
       end
-      #Rbdigital.logger.info "This is the last page (#{page})"
+      Rbdigital.logger.info "This is the last page (#{page})"
       false
     end
 
@@ -273,7 +288,59 @@ module Rbdigital
         end
       end
       failed
-  end
+    end
+
+    def remove_issue(id)
+      Rbdigital.logger.info "Removing issue id=#{id}"
+      uri = URI.parse(REMOVE_URL)
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      request = Net::HTTP::Post.new(uri.request_uri)
+      request.set_form_data({:lib_id => @id, :issue_id => id, :service_t => "magazines"})
+      request['Cookie'] = Request.cookies
+
+      status = msg = ''
+      begin
+        response = http.request(request)
+        # to check retrieve json and get codes
+        json = JSON.parse(response.body)
+        status = json['status']
+        msg = json['title']
+      rescue Net::ReadTimeout => e
+        Rbdigital.logger.error "Removal timed out (#{e.message})"
+        return false
+      end
+
+      if status =~ /^ok/i
+        Rbdigital.logger.info "Issue #{id} removed successfully (#{status}: #{msg})"
+        return true
+      else
+        Rbdigital.logger.error "Removal error #{id}"
+        return false
+      end
+    end
+
+    def remove_issues(user_name, user_pass, *issue_ids)
+      failed = []
+      if not issue_ids.empty?
+        log_out
+        log_in(user_name, user_pass)
+        if not logged_in?
+          Rbdigital.logger.error "not logged in (#{user_name})"
+          raise LoginError.new("Login failed for #{user_name}")
+        end
+        # checkout each mag by id for logged in user
+        issue_ids.each do |id|
+          # checkout the latest issue
+          success = remove_issue(id)
+          failed << id unless success
+          # need to wait after each checkout, throttling being applied
+          Rbdigital.logger.debug "Waiting #{CHECKOUT_WAIT}s before next removal"
+          sleep(CHECKOUT_WAIT)
+        end
+      end
+      failed
+    end
 
     private
 
