@@ -214,7 +214,7 @@ module Rbdigital
             iss[:id] = $1
           end
           if anchor[:title] =~ /^Read\s+(\w+\s+\d+\s*,\s+\d+)\s+issue\s+of\s+(.+)$/
-            iss[:date] = $1
+            iss[:date] = Date.parse($1)
             iss[:title] = $2
           end
           issues << iss

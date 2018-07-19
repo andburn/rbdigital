@@ -270,7 +270,7 @@ describe 'Library' do
       expect(issues.length).to eq(5)
       expect(first[:id]).to eq("415875")
       expect(first[:title]).to eq("Radio Times")
-      expect(first[:date]).to eq("October 26, 2018")
+      expect(first[:date]).to eq(Date.new(2018, 10, 26))
       expect(issues.last[:id]).to eq("402538")
     end
 
