@@ -187,7 +187,8 @@ module Rbdigital
       issues
     end
 
-    # NOTE collection page should be in row form, not grid (set in preferences)
+    # NOTE collection page should be in row form, not grid and max per page
+    # TODO could load required preferences with request after login
     def build_collection_page(issues, page)
       uri = URI.parse(COLLECTION_URL)
       http = Net::HTTP.new(uri.host, uri.port)
@@ -335,8 +336,8 @@ module Rbdigital
           success = remove_issue(id)
           failed << id unless success
           # need to wait after each checkout, throttling being applied
-          Rbdigital.logger.debug "Waiting #{CHECKOUT_WAIT}s before next removal"
-          sleep(CHECKOUT_WAIT)
+          Rbdigital.logger.debug "Waiting 10s before next removal"
+          sleep(10)
         end
       end
       failed
